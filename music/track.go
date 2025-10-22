@@ -1,7 +1,6 @@
 package music
 
 import (
-	"slices"
 	"strings"
 )
 
@@ -39,6 +38,10 @@ func (t Track) Validate() error {
 
 	if strings.TrimSpace(t.FilePath) == "" {
 		return ErrEmptyFilePath
+	}
+
+	if strings.TrimSpace(t.Genre) == "" {
+		return ErrEmptyGenre
 	}
 
 	return nil

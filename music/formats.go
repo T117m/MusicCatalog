@@ -1,6 +1,9 @@
 package music
 
-import "slices"
+import (
+	"slices"
+	"strings"
+)
 
 const (
 	MP3  = "mp3"
@@ -12,5 +15,6 @@ const (
 var SupportedFormats = []string{MP3, FLAC, WAV, M4A}
 
 func (t Track) IsSupportedFormat() bool {
-	return slices.Contains(SupportedFormats, t.FileType)
+	f := strings.ToLower(t.FileType)
+	return slices.Contains(SupportedFormats, f)
 }
