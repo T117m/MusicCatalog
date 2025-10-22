@@ -1,7 +1,6 @@
 package music
 
 import (
-	"errors"
 	"slices"
 	"strings"
 )
@@ -25,35 +24,23 @@ func New(title, artist, genre, fileType, filePath string) Track {
 	}
 }
 
-const (
-	MP3  = "mp3"
-	FLAC = "flac"
-	WAV  = "wav"
-	M4A  = "m4a"
-)
-
-var SupportedFormats = []string{MP3, FLAC, WAV, M4A}
-
 func (t Track) Validate() error {
 	if strings.TrimSpace(t.Title) == "" {
-		return errors.New("Title cannot be empty")
+		return ErrEmptyTitle
 	}
 
 	if strings.TrimSpace(t.Artist) == "" {
-		return errors.New("Artist cannot be empty")
+		return ErrEmptyArtist
 	}
 
 	if !t.IsSupportedFormat() {
-		return errors.New("File type not supported")
+		return ErrUnsupportedFormat
 	}
 
 	if strings.TrimSpace(t.FilePath) == "" {
-		return errors.New("File path cannot be empty")
+		return ErrEmptyFilePath
 	}
 
 	return nil
 }
 
-func (t Track) IsSupportedFormat() bool {
-	return slices.Contains(SupportedFormats, t.FileType)
-}
