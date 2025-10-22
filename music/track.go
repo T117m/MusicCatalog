@@ -2,7 +2,7 @@ package music
 
 type Track struct {
 	ID       int
-	Name     string
+	Title    string
 	Artist   string
 	Genre    string
 	FileType string
