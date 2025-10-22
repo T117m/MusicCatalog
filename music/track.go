@@ -1,8 +1,6 @@
 package music
 
-import (
-	"strings"
-)
+import "strings"
 
 type Track struct {
 	ID       int    `db:"id"`
