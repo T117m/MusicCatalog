@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS tracks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    artist TEXT NOT NULL,
+    genre TEXT NOT NULL,
+    file_type TEXT NOT NULL,
+    file_path TEXT UNIQUE NOT NULL
+);
