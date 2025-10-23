@@ -30,6 +30,10 @@ func (t Track) Validate() error {
 		return ErrEmptyArtist
 	}
 
+	if t.FileType == "" {
+		return ErrEmptyFileType
+	}
+
 	if !t.IsSupportedFormat() {
 		return ErrUnsupportedFormat
 	}
