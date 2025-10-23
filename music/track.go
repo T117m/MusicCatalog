@@ -1,6 +1,9 @@
 package music
 
-import "strings"
+import (
+	"path/filepath"
+	"strings"
+)
 
 type Track struct {
 	ID       int    `db:"id"`
@@ -11,7 +14,7 @@ type Track struct {
 	FilePath string `db:"file_path"`
 }
 
-func New(title, artist, genre, fileType, filePath string) Track {
+func NewTrack(title, artist, genre, fileType, filePath string) Track {
 	return Track{
 		Title:    title,
 		Artist:   artist,
@@ -30,22 +33,41 @@ func (t Track) Validate() error {
 		return ErrEmptyArtist
 	}
 
-	if t.FileType == "" {
-		return ErrEmptyFileType
+	if strings.TrimSpace(t.Genre) == "" {
+		return ErrEmptyGenre
 	}
 
-	if !t.IsSupportedFormat() {
-		return ErrUnsupportedFormat
+	if t.FileType == "" {
+		return ErrEmptyFileType
 	}
 
 	if strings.TrimSpace(t.FilePath) == "" {
 		return ErrEmptyFilePath
 	}
 
-	if strings.TrimSpace(t.Genre) == "" {
-		return ErrEmptyGenre
+	if !t.IsSupportedFormat() {
+		return ErrUnsupportedFormat
 	}
 
 	return nil
 }
 
+func (t *Track) Normalize() {
+	if strings.TrimSpace(t.Title) == "" {
+		t.Title = "Untitled"
+	}
+
+	if strings.TrimSpace(t.Artist) == "" {
+		t.Artist = "Unknown"
+	}
+
+	if strings.TrimSpace(t.Genre) == "" {
+		t.Genre = "Other"
+	}
+
+	if t.FileType == "" {
+		if ext := strings.TrimPrefix(filepath.Ext(t.FilePath), "."); ext != "" {
+			t.FileType = strings.ToLower(ext)
+		}
+	}
+}
