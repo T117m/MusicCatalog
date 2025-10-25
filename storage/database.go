@@ -31,15 +31,27 @@ func New() (*Storage, error) {
 
 	storage := &Storage{db: db}
 
-	// TODO: make an actual migrations pasing
-	q, err := migrations.ReadFile("001_create_tracks.sql")
+	entries, err := migrations.ReadDir("migrations")
 	if err != nil {
-		return nil, fmt.Errorf("error reading migration 001: %w", err)
+		return nil, fmt.Errorf("error reading migrations directory: %w", err)
 	}
 
-	_, err = storage.db.Exec(string(q))
-	if err != nil {
-		return nil, fmt.Errorf("error executing migrations: %w", err)
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+
+		name := entry.Name()
+
+		migration, err := migrations.ReadFile(name)
+		if err != nil {
+			return nil, fmt.Errorf("error reading migration %s: %w", name, err)
+		}
+
+		_, err = storage.db.Exec(string(migration))
+		if err != nil {
+			return nil, fmt.Errorf("error executing migration %s: %w", name, err)
+		}
 	}
 
 	return storage, nil

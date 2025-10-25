@@ -14,7 +14,7 @@ type Track struct {
 	FilePath string `db:"file_path"`
 }
 
-func NewTrack(title, artist, genre, fileType, filePath string) Track {
+func New(title, artist, genre, fileType, filePath string) Track {
 	return Track{
 		Title:    title,
 		Artist:   artist,
