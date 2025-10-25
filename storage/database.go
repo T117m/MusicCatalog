@@ -5,7 +5,6 @@ import (
 	"embed"
 	"fmt"
 	"path/filepath"
-	"io/fs"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -17,7 +16,7 @@ type Storage struct {
 	db *sql.DB
 }
 
-func NewStorage() (*Storage, error) {
+func New() (*Storage, error) {
 	dbPath := filepath.Join("storage", "internal", "catalog.db")
 
 	db, err := sql.Open("sqlite3", dbPath)
