@@ -23,7 +23,6 @@ func New() (*Storage, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error opening a database: %w", err)
 	}
-	defer db.Close()
 
 	if err := db.Ping(); err != nil {
 		return nil, fmt.Errorf("error connecting to database: %w", err)
@@ -43,7 +42,7 @@ func New() (*Storage, error) {
 
 		name := entry.Name()
 
-		migration, err := migrations.ReadFile(name)
+		migration, err := migrations.ReadFile(filepath.Join("migrations", name))
 		if err != nil {
 			return nil, fmt.Errorf("error reading migration %s: %w", name, err)
 		}
