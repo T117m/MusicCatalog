@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	track := music.New("INTERLOPER (seventeen_split.cfg) #JerseyClub", "DJ CARCINOGEN", "", "mp3", "INTERLOPER (seventeen_split.cfg) #JerseyClub - DJ CARCINOGEN.mp3")
+	track := music.New("test", "", "", "mp3", "storage/internal/test.mp3")
 	track.Normalize()
 
 	if err := track.Validate(); err != nil {
@@ -25,4 +25,11 @@ func main() {
 	if err = strg.AddTrack(track); err != nil {
 		log.Fatalf("error adding track: %s", err)
 	}
+
+	tracks, err := strg.GetAllTracks()
+	if err != nil {
+		log.Fatalf("error getting all tracks: %s", err)
+	}
+
+	fmt.Printf("треки извлечены: %+v\n", tracks)
 }

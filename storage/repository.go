@@ -28,7 +28,31 @@ func (s *Storage) AddTrack(track music.Track) error {
 }
 
 func (s *Storage) GetAllTracks() ([]music.Track, error) {
-	return nil, nil
+	q := "SELECT * FROM tracks;"
+
+	rows, err := s.db.Query(q)
+	if err != nil {
+		return nil, fmt.Errorf("can't get tracks: %w", err)
+	}
+	defer rows.Close()
+
+	tracks := make([]music.Track, 0)
+	for rows.Next() {
+		track := music.Track{}
+
+		err := rows.Scan(&track.ID, &track.Title, &track.Artist, &track.Genre, &track.FileType, &track.FilePath)
+		if err != nil {
+			return nil, fmt.Errorf("can't get track: %w", err)
+		}
+
+		tracks = append(tracks, track)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("can't iterate over rows: %w", err)
+	}
+
+	return tracks, nil
 }
 
 func (s *Storage) GetTracksByArtist(artist string) ([]music.Track, error) {
