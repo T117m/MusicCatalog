@@ -32,4 +32,18 @@ func main() {
 	}
 
 	fmt.Printf("треки извлечены: %+v\n", tracks)
+
+	unknowns, err := strg.GetTracksByArtist("Unknown")
+	if err != nil {
+		log.Fatalf("error getting tracks by Unknown: %s", err)
+	}
+
+	fmt.Printf("треки от Unknown: %+v\n", unknowns)
+
+	knowns, err := strg.GetTracksByArtist("Known")
+	if err != nil {
+		log.Fatalf("error getting tracks by Known: %s", err)
+	}
+
+	fmt.Printf("треки от Known: %+v\n", knowns)
 }
