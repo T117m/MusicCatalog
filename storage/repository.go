@@ -71,3 +71,21 @@ func (s *Storage) GetTracksByArtist(artist string) ([]music.Track, error) {
 
 	return s.scanTracks(rows)
 }
+
+func (s *Storage) GetTrackByID(id int) (music.Track, error) {
+	q := "SELECT id, title, artist, genre, file_type, file_path FROM tracks WHERE id=?;"
+
+	track := music.Track{}
+
+	row := s.db.QueryRow(q, id)
+	err := row.Scan(&track.ID, &track.Title, &track.Artist, &track.Genre, &track.FileType, &track.FilePath)
+	if err != nil {
+		return track, fmt.Errorf("can't scan track: %w", err)
+	}
+
+	return track, nil
+}
+
+func (s *Storage) RemoveTrackByID(id int) error {
+	return nil
+}
