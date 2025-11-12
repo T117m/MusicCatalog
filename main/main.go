@@ -54,10 +54,20 @@ func main() {
 
 	fmt.Printf("трек с ID %d: %+v\n", track.ID, idTrack)
 
-	idTrackF, err := strg.GetTrackByID(0)
+	// idTrackF, err := strg.GetTrackByID(0)
+	// if err != nil {
+		// log.Fatalf("error getting track by ID %d: %s", 0, err)
+	// }
+// 
+	// fmt.Printf("трек с ID %d: %+v\n", 0, idTrackF)
+
+	err = strg.RemoveTrackByID(0)
+	if err != nil {
+		log.Fatalf("error deleting track by ID %d: %s", 0, err)
+	}
+
+	_, err = strg.GetTrackByID(0)
 	if err != nil {
 		log.Fatalf("error getting track by ID %d: %s", 0, err)
 	}
-
-	fmt.Printf("трек с ID %d: %+v\n", 0, idTrackF)
 }

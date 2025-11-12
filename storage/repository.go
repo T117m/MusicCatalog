@@ -87,5 +87,16 @@ func (s *Storage) GetTrackByID(id int) (music.Track, error) {
 }
 
 func (s *Storage) RemoveTrackByID(id int) error {
+	if _, err := s.GetTrackByID(id); err != nil {
+		return fmt.Errorf("can't find track with id %d: %w", id, err)
+	}
+
+	q := "DELETE FROM tracks WHERE id=?;"
+
+	_, err := s.db.Exec(q, id)
+	if err != nil {
+		return fmt.Errorf("can't delete track by id %d: %w", id, err)
+	}
+
 	return nil
 }
