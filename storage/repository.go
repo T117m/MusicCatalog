@@ -29,6 +29,8 @@ func (s *Storage) AddTrack(track *music.Track) error {
 }
 
 func (s *Storage) scanTracks(rows *sql.Rows) ([]music.Track, error) {
+	defer rows.Close()
+	
 	tracks := make([]music.Track, 0)
 	for rows.Next() {
 		track := music.Track{}
@@ -55,7 +57,6 @@ func (s *Storage) GetAllTracks() ([]music.Track, error) {
 	if err != nil {
 		return nil, fmt.Errorf("can't get tracks: %w", err)
 	}
-	defer rows.Close()
 
 	return s.scanTracks(rows)
 }
@@ -67,7 +68,6 @@ func (s *Storage) GetTracksByArtist(artist string) ([]music.Track, error) {
 	if err != nil {
 		return nil, fmt.Errorf("can't get tracks: %w", err)
 	}
-	defer rows.Close()
 
 	return s.scanTracks(rows)
 }
