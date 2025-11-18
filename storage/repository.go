@@ -5,11 +5,20 @@ import (
 	"fmt"
 	"github.com/T117m/MusicCatalog/music"
 	"os"
+	"errors"
+	"io/fs"
 )
 
 func (s *Storage) AddTrack(track *music.Track) error {
-	if _, err := os.Stat(track.FilePath); err != nil {
-		return fmt.Errorf("can't add track: %w", err)
+	fileInfo, err := os.Stat(track.FilePath)
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return fmt.Errorf("file %s does not exist: %w", track.FilePath, err)
+		}
+		return fmt.Errorf("can't access file: %w", err)
+	}
+	if fileInfo.IsDir() {
+		return fmt.Errorf("%s is a directory: %w", track.FilePath, err)
 	}
 
 	track.Normalize()
@@ -20,7 +29,7 @@ func (s *Storage) AddTrack(track *music.Track) error {
 
 	q := "INSERT INTO tracks(title, artist, genre, file_type, file_path) VALUES (?, ?, ?, ?, ?) RETURNING id;"
 
-	err := s.db.QueryRow(q, track.Title, track.Artist, track.Genre, track.FileType, track.FilePath).Scan(&track.ID)
+	err = s.db.QueryRow(q, track.Title, track.Artist, track.Genre, track.FileType, track.FilePath).Scan(&track.ID)
 	if err != nil {
 		return fmt.Errorf("can't add track due to query error: %w", err)
 	}
