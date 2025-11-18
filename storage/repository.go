@@ -13,7 +13,7 @@ const (
 	insertTrackQuery       = "INSERT INTO tracks(title, artist, genre, file_type, file_path) VALUES (?, ?, ?, ?, ?) RETURNING id;"
 	selectAllQuery         = "SELECT id, title, artist, genre, file_type, file_path FROM tracks;"
 	selectAllByArtistQuery = "SELECT id, title, artist, genre, file_type, file_path FROM tracks WHERE artist=?;"
-	selectAllByID          = "SELECT id, title, artist, genre, file_type, file_path FROM tracks WHERE id=?;"
+	selectAllByIDQuery     = "SELECT id, title, artist, genre, file_type, file_path FROM tracks WHERE id=?;"
 )
 
 func (s *Storage) AddTrack(track *music.Track) error {
@@ -85,7 +85,7 @@ func (s *Storage) GetTracksByArtist(artist string) ([]music.Track, error) {
 func (s *Storage) GetTrackByID(id int) (music.Track, error) {
 	track := music.Track{}
 
-	row := s.db.QueryRow(selectAllByID, id)
+	row := s.db.QueryRow(selectAllByIDQuery, id)
 	err := row.Scan(&track.ID, &track.Title, &track.Artist, &track.Genre, &track.FileType, &track.FilePath)
 	if err != nil {
 		return track, fmt.Errorf("can't scan track: %w", err)
@@ -95,7 +95,7 @@ func (s *Storage) GetTrackByID(id int) (music.Track, error) {
 }
 
 func (s *Storage) RemoveTrackByID(id int) error {
-	r, err := s.db.Exec(selectAllByID, id)
+	r, err := s.db.Exec(selectAllByIDQuery, id)
 	if err != nil {
 		return fmt.Errorf("can't delete track by id %d: %w", id, err)
 	}
