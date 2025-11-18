@@ -2,11 +2,18 @@ package storage
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/T117m/MusicCatalog/music"
-	"os"
-	"errors"
 	"io/fs"
+	"os"
+)
+
+const (
+	insertTrackQuery       = "INSERT INTO tracks(title, artist, genre, file_type, file_path) VALUES (?, ?, ?, ?, ?) RETURNING id;"
+	selectAllQuery         = "SELECT id, title, artist, genre, file_type, file_path FROM tracks;"
+	selectAllByArtistQuery = "SELECT id, title, artist, genre, file_type, file_path FROM tracks WHERE artist=?;"
+	selectAllByID          = "SELECT id, title, artist, genre, file_type, file_path FROM tracks WHERE id=?;"
 )
 
 func (s *Storage) AddTrack(track *music.Track) error {
@@ -27,9 +34,7 @@ func (s *Storage) AddTrack(track *music.Track) error {
 		return fmt.Errorf("can't add track: validation fail: %w", err)
 	}
 
-	q := "INSERT INTO tracks(title, artist, genre, file_type, file_path) VALUES (?, ?, ?, ?, ?) RETURNING id;"
-
-	err = s.db.QueryRow(q, track.Title, track.Artist, track.Genre, track.FileType, track.FilePath).Scan(&track.ID)
+	err = s.db.QueryRow(insertTrackQuery, track.Title, track.Artist, track.Genre, track.FileType, track.FilePath).Scan(&track.ID)
 	if err != nil {
 		return fmt.Errorf("can't add track due to query error: %w", err)
 	}
@@ -39,7 +44,7 @@ func (s *Storage) AddTrack(track *music.Track) error {
 
 func (s *Storage) scanTracks(rows *sql.Rows) ([]music.Track, error) {
 	defer rows.Close()
-	
+
 	tracks := make([]music.Track, 0)
 	for rows.Next() {
 		track := music.Track{}
@@ -60,9 +65,7 @@ func (s *Storage) scanTracks(rows *sql.Rows) ([]music.Track, error) {
 }
 
 func (s *Storage) GetAllTracks() ([]music.Track, error) {
-	q := "SELECT id, title, artist, genre, file_type, file_path FROM tracks;"
-
-	rows, err := s.db.Query(q)
+	rows, err := s.db.Query(selectAllQuery)
 	if err != nil {
 		return nil, fmt.Errorf("can't get tracks: %w", err)
 	}
@@ -71,9 +74,7 @@ func (s *Storage) GetAllTracks() ([]music.Track, error) {
 }
 
 func (s *Storage) GetTracksByArtist(artist string) ([]music.Track, error) {
-	q := "SELECT id, title, artist, genre, file_type, file_path FROM tracks WHERE artist=?;"
-
-	rows, err := s.db.Query(q, artist)
+	rows, err := s.db.Query(selectAllByArtistQuery, artist)
 	if err != nil {
 		return nil, fmt.Errorf("can't get tracks: %w", err)
 	}
@@ -82,11 +83,9 @@ func (s *Storage) GetTracksByArtist(artist string) ([]music.Track, error) {
 }
 
 func (s *Storage) GetTrackByID(id int) (music.Track, error) {
-	q := "SELECT id, title, artist, genre, file_type, file_path FROM tracks WHERE id=?;"
-
 	track := music.Track{}
 
-	row := s.db.QueryRow(q, id)
+	row := s.db.QueryRow(selectAllByID, id)
 	err := row.Scan(&track.ID, &track.Title, &track.Artist, &track.Genre, &track.FileType, &track.FilePath)
 	if err != nil {
 		return track, fmt.Errorf("can't scan track: %w", err)
@@ -96,9 +95,7 @@ func (s *Storage) GetTrackByID(id int) (music.Track, error) {
 }
 
 func (s *Storage) RemoveTrackByID(id int) error {
-	q := "DELETE FROM tracks WHERE id=?;"
-
-	r, err := s.db.Exec(q, id)
+	r, err := s.db.Exec(selectAllByID, id)
 	if err != nil {
 		return fmt.Errorf("can't delete track by id %d: %w", id, err)
 	}
