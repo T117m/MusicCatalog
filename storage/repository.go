@@ -105,3 +105,7 @@ func (s *Storage) RemoveTrackByID(id int) error {
 
 	return nil
 }
+
+func (s *Storage) Close() error {
+	return s.db.Close()
+}
