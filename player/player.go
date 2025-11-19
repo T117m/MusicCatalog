@@ -7,6 +7,7 @@ import (
 	"github.com/gopxl/beep/mp3"
 	"github.com/gopxl/beep/speaker"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -19,6 +20,7 @@ type Player struct {
 	ctrl         *beep.Ctrl
 	done         chan bool
 	stop         chan struct{}
+	mutex        sync.Mutex
 }
 
 type PlayerState int
@@ -36,12 +38,19 @@ func New() *Player {
 
 	return &Player{
 		state: Stopped,
-		done:  make(chan bool),
+		done:  make(chan bool, 1),
 		stop:  make(chan struct{}),
 	}
 }
 
 func (p *Player) Play(track *music.Track) error {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+
+	if p.state == Playing {
+		p.stopPlayback()
+	}
+
 	f, err := os.Open(track.FilePath)
 	if err != nil {
 		return fmt.Errorf("can't open %s: %w", track.FilePath, err)
@@ -74,29 +83,52 @@ func (p *Player) Play(track *music.Track) error {
 
 	p.format = format
 	p.currentTrack = track
-	p.ctrl = &beep.Ctrl{Streamer: streamer}
+	p.ctrl = &beep.Ctrl{Streamer: p.streamer}
 	p.state = Playing
+
+	p.done = make(chan bool, 1)
+	p.stop = make(chan struct{})
 
 	go func() {
 		speaker.Play(beep.Seq(p.ctrl, beep.Callback(func() {
-			p.done <- true
+			select {
+			case p.done <- true:
+			default:
+			}
 		})))
 
 		select {
 		case <-p.done:
-			p.state = Stopped
+			p.mutex.Lock()
+			if p.state == Playing {
+				p.state = Stopped
+			}
+			p.mutex.Unlock()
 		case <-p.stop:
 			speaker.Lock()
-			p.ctrl.Streamer = nil
+			if p.ctrl != nil {
+				p.ctrl.Streamer = nil
+			}
 			speaker.Unlock()
 		}
 
+		p.mutex.Lock()
 		if p.source != nil {
 			p.source.Close()
+			p.source = nil
 		}
+		p.mutex.Unlock()
 	}()
 
 	return nil
+}
+
+func (p *Player) stopPlayback() {
+	if p.stop != nil {
+		close(p.stop)
+		p.stop = nil
+	}
+	p.state = Stopped
 }
 
 func (p *Player) Wait() {
@@ -110,4 +142,3 @@ func (p *Player) IsPlaying() bool {
 func (p *Player) GetCurrentTrack() *music.Track {
 	return p.currentTrack
 }
-
