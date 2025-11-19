@@ -9,10 +9,10 @@ const (
 	MP3  = "mp3"
 	FLAC = "flac"
 	WAV  = "wav"
-	M4A  = "m4a"
+	OGG  = "ogg"
 )
 
-var SupportedFormats = []string{MP3, FLAC, WAV, M4A}
+var SupportedFormats = []string{MP3, FLAC, WAV, OGG}
 
 func (t Track) IsSupportedFormat() bool {
 	f := strings.ToLower(t.FileType)

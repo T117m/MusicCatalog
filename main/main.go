@@ -1,10 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"github.com/T117m/MusicCatalog/music"
-	"github.com/T117m/MusicCatalog/storage"
+	// "github.com/T117m/MusicCatalog/storage"
+	"github.com/T117m/MusicCatalog/player"
 	"log"
+	"time"
 )
 
 func main() {
@@ -15,59 +16,32 @@ func main() {
 		log.Fatalf("error creating track: %s", err)
 	}
 
-	fmt.Printf("трек создан: %+v\n", track)
+	log.Printf("трек создан: %+v\n", track)
 
-	strg, err := storage.New()
-	if err != nil {
-		log.Fatalf("error creating storage: %s", err)
-	}
-
-	if err = strg.AddTrack(&track); err != nil {
-		log.Fatalf("error adding track: %s", err)
-	}
-
-	tracks, err := strg.GetAllTracks()
-	if err != nil {
-		log.Fatalf("error getting all tracks: %s", err)
-	}
-
-	fmt.Printf("треки извлечены: %+v\n", tracks)
-
-	unknowns, err := strg.GetTracksByArtist("Unknown")
-	if err != nil {
-		log.Fatalf("error getting tracks by Unknown: %s", err)
-	}
-
-	fmt.Printf("треки от Unknown: %+v\n", unknowns)
-
-	knowns, err := strg.GetTracksByArtist("Known")
-	if err != nil {
-		log.Fatalf("error getting tracks by Known: %s", err)
-	}
-
-	fmt.Printf("треки от Known: %+v\n", knowns)
-
-	idTrack, err := strg.GetTrackByID(track.ID)
-	if err != nil {
-		log.Fatalf("error getting track by ID %d: %s", track.ID, err)
-	}
-
-	fmt.Printf("трек с ID %d: %+v\n", track.ID, idTrack)
-
-	// idTrackF, err := strg.GetTrackByID(0)
+	// strg, err := storage.New()
 	// if err != nil {
-		// log.Fatalf("error getting track by ID %d: %s", 0, err)
+		// log.Fatalf("error creating storage: %s", err)
 	// }
 // 
-	// fmt.Printf("трек с ID %d: %+v\n", 0, idTrackF)
+	// if err = strg.AddTrack(&track); err != nil {
+		// log.Fatalf("error adding track: %s", err)
+	// } else {
+		// log.Printf("трек %s добавлен", track.Title)
+	// }
+// 
+	// tracks, err := strg.GetAllTracks()
+	// if err != nil {
+		// log.Fatalf("error getting all tracks: %s", err)
+	// }
+// 
+	// log.Printf("треки: %+v\n", tracks)
 
-	err = strg.RemoveTrackByID(0)
+	plr := player.New()
+	err := plr.Play(&track)
+
 	if err != nil {
-		log.Fatalf("error deleting track by ID %d: %s", 0, err)
+		log.Fatalf("error playing track: %s", err)
 	}
 
-	_, err = strg.GetTrackByID(0)
-	if err != nil {
-		log.Fatalf("error getting track by ID %d: %s", 0, err)
-	}
+	time.Sleep(30 * time.Second)
 }
