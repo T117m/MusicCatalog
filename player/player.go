@@ -98,3 +98,16 @@ func (p *Player) Play(track *music.Track) error {
 
 	return nil
 }
+
+func (p *Player) Wait() {
+	<-p.done
+}
+
+func (p *Player) IsPlaying() bool {
+	return p.state == Playing
+}
+
+func (p *Player) GetCurrentTrack() *music.Track {
+	return p.currentTrack
+}
+

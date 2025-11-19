@@ -5,7 +5,6 @@ import (
 	// "github.com/T117m/MusicCatalog/storage"
 	"github.com/T117m/MusicCatalog/player"
 	"log"
-	"time"
 )
 
 func main() {
@@ -37,11 +36,11 @@ func main() {
 	// log.Printf("треки: %+v\n", tracks)
 
 	plr := player.New()
-	err := plr.Play(&track)
 
+	err := plr.Play(&track)
 	if err != nil {
 		log.Fatalf("error playing track: %s", err)
 	}
 
-	time.Sleep(30 * time.Second)
+	plr.Wait()
 }
