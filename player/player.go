@@ -131,6 +131,15 @@ func (p *Player) stopPlayback() {
 	p.state = Stopped
 }
 
+func (p *Player) Stop() {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+
+	if p.state == Playing {
+		p.stopPlayback()
+	}
+}
+
 func (p *Player) Wait() {
 	<-p.done
 }
@@ -141,4 +150,24 @@ func (p *Player) IsPlaying() bool {
 
 func (p *Player) GetCurrentTrack() *music.Track {
 	return p.currentTrack
+}
+
+func (p *Player) Pause() {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+
+	if p.state == Playing && p.ctrl != nil {
+		p.ctrl.Paused = true
+		p.state = Paused
+	}
+}
+
+func (p *Player) Resume() {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+
+	if p.state == Paused && p.ctrl != nil {
+		p.ctrl.Paused = false
+		p.state = Playing
+	}
 }
