@@ -14,6 +14,7 @@ const (
 	selectAllQuery         = "SELECT id, title, artist, genre, file_type, file_path FROM tracks;"
 	selectAllByArtistQuery = "SELECT id, title, artist, genre, file_type, file_path FROM tracks WHERE artist=?;"
 	selectAllByIDQuery     = "SELECT id, title, artist, genre, file_type, file_path FROM tracks WHERE id=?;"
+	deleteByIDQuery        = "DELETE FROM tracks WHERE id=?;"
 )
 
 func (s *Storage) AddTrack(track *music.Track) error {
@@ -95,7 +96,7 @@ func (s *Storage) GetTrackByID(id int) (music.Track, error) {
 }
 
 func (s *Storage) RemoveTrackByID(id int) error {
-	r, err := s.db.Exec(selectAllByIDQuery, id)
+	r, err := s.db.Exec(deleteByIDQuery, id)
 	if err != nil {
 		return fmt.Errorf("can't delete track by id %d: %w", id, err)
 	}
