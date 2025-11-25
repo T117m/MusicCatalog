@@ -80,7 +80,7 @@ func (p *Player) Play(track *music.Track) error {
 	}
 
 	if err != nil {
-		p.source.Close()
+		f.Close()
 		return fmt.Errorf("can't decode %s: %w", track.FilePath, err)
 	}
 
