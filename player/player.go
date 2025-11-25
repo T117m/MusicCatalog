@@ -1,6 +1,7 @@
 package player
 
 import (
+	"errors"
 	"fmt"
 	"github.com/T117m/MusicCatalog/music"
 	"github.com/gopxl/beep"
@@ -187,4 +188,17 @@ func (p *Player) Resume() {
 		p.ctrl.Paused = false
 		p.state = Playing
 	}
+}
+
+func (p *Player) Seek(position time.Duration) error {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+
+	if p.source == nil || p.state == Stopped {
+		return errors.New("no track playing")
+	}
+
+	pos := p.format.SampleRate.N(position)
+
+	return p.source.Seek(pos)
 }
