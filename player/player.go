@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"github.com/T117m/MusicCatalog/music"
 	"github.com/gopxl/beep"
+	"github.com/gopxl/beep/flac"
 	"github.com/gopxl/beep/mp3"
 	"github.com/gopxl/beep/speaker"
+	"github.com/gopxl/beep/vorbis"
+	"github.com/gopxl/beep/wav"
 	"os"
 	"sync"
 	"time"
@@ -64,9 +67,23 @@ func (p *Player) Play(track *music.Track) error {
 	switch track.FileType {
 	case music.MP3:
 		streamer, format, err = mp3.Decode(f)
+	case music.FLAC:
+		streamer, format, err = flac.Decode(f)
+	case music.WAV:
+		streamer, format, err = wav.Decode(f)
+	case music.OGG:
+		streamer, format, err = vorbis.Decode(f)
 	default:
+		f.Close()
 		return music.ErrUnsupportedFormat
 	}
+
+	defer func() {
+		if err != nil && p.source != nil {
+			p.source.Close()
+			p.source = nil
+		}
+	}()
 
 	if err != nil {
 		p.source.Close()
