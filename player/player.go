@@ -215,3 +215,9 @@ func (p *Player) Seek(position time.Duration) error {
 
 	return p.source.Seek(pos)
 }
+
+func (p *Player) GetState() PlayerState {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+	return p.state
+}
