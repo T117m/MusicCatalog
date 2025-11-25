@@ -216,6 +216,28 @@ func (p *Player) Seek(position time.Duration) error {
 	return p.source.Seek(pos)
 }
 
+func (p *Player) GetPosition() time.Duration {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+
+	if p.source == nil {
+		return 0
+	}
+
+	return p.format.SampleRate.D(p.source.Position())
+}
+
+func (p *Player) GetDuration() time.Duration {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+
+	if p.source == nil {
+		return 0
+	}
+
+	return p.format.SampleRate.D(p.source.Len())
+}
+
 func (p *Player) GetState() PlayerState {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
