@@ -213,7 +213,7 @@ func (p *Player) Seek(position time.Duration) error {
 
 	speaker.Play(p.ctrl)
 
-	return p.source.Seek(pos)
+	return nil
 }
 
 func (p *Player) GetPosition() time.Duration {
