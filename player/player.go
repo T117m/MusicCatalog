@@ -160,6 +160,8 @@ func (p *Player) IsPlaying() bool {
 }
 
 func (p *Player) GetCurrentTrack() *music.Track {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
 	return p.currentTrack
 }
 
