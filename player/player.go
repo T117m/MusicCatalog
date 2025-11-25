@@ -79,13 +79,6 @@ func (p *Player) Play(track *music.Track) error {
 		return music.ErrUnsupportedFormat
 	}
 
-	defer func() {
-		if err != nil && p.source != nil {
-			p.source.Close()
-			p.source = nil
-		}
-	}()
-
 	if err != nil {
 		p.source.Close()
 		return fmt.Errorf("can't decode %s: %w", track.FilePath, err)
@@ -199,6 +192,26 @@ func (p *Player) Seek(position time.Duration) error {
 	}
 
 	pos := p.format.SampleRate.N(position)
+
+	speaker.Lock()
+	if p.ctrl != nil {
+		p.ctrl.Streamer = nil
+	}
+	speaker.Unlock()
+
+	if err := p.source.Seek(pos); err != nil {
+		return err
+	}
+
+	if p.format.SampleRate != defaultSampleRate {
+		p.streamer = beep.Resample(4, p.format.SampleRate, defaultSampleRate, p.source)
+	} else {
+		p.streamer = p.source
+	}
+
+	p.ctrl = &beep.Ctrl{Streamer: p.streamer}
+
+	speaker.Play(p.ctrl)
 
 	return p.source.Seek(pos)
 }
