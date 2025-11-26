@@ -2,9 +2,12 @@ package ui
 
 import (
 	"fmt"
+
 	"github.com/T117m/MusicCatalog/music"
 	"github.com/T117m/MusicCatalog/player"
 	"github.com/T117m/MusicCatalog/storage"
+
+	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -24,10 +27,11 @@ const (
 )
 
 func New(store *storage.Storage, player *player.Player) model {
+	tracks, _ := store.GetAllTracks()
 	return model{
 		storage: store,
 		player:  player,
-		tracks:  []music.Track{},
+		tracks:  tracks,
 		view:    TrackListView,
 	}
 }
@@ -72,7 +76,7 @@ func (m model) View() string {
 		if i == m.selected {
 			cursor = ">"
 		}
-		s += fmt.Sprintf("%s %s - %s", cursor, track.Artist, track.Title)
+		s += fmt.Sprintf("%s %s - %s\n", cursor, track.Artist, track.Title)
 	}
 
 	s += "\nНажмите q чтобы выйти"
