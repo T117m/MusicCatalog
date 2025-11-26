@@ -57,7 +57,7 @@ func New(store *storage.Storage, player *player.Player) model {
 		table.WithColumns(columns),
 		table.WithRows(rows),
 		table.WithFocused(true),
-		table.WithHeight(7),
+		table.WithHeight(len(rows) + 1),
 	)
 
 	s := table.DefaultStyles()
@@ -68,7 +68,7 @@ func New(store *storage.Storage, player *player.Player) model {
 		Bold(true)
 	s.Selected = s.Selected.
 		Foreground(gloss.Color("7")).
-		Background(gloss.Color("#182c25")).
+		Background(gloss.Color("#306844")).
 		Bold(true)
 	t.SetStyles(s)
 
