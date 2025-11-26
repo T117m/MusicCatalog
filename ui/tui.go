@@ -1,9 +1,8 @@
 package ui
 
 import (
-	"fmt"
+	"strconv"
 
-	"github.com/T117m/MusicCatalog/music"
 	"github.com/T117m/MusicCatalog/player"
 	"github.com/T117m/MusicCatalog/storage"
 
@@ -14,8 +13,7 @@ import (
 type model struct {
 	storage  *storage.Storage
 	player   *player.Player
-	tracks   []music.Track
-	selected int
+	tracks   table.Model
 	view     ViewMode
 }
 
@@ -28,10 +26,39 @@ const (
 
 func New(store *storage.Storage, player *player.Player) model {
 	tracks, _ := store.GetAllTracks()
+
+	columns := []table.Column{
+		{Title: "ID", Width: 4},
+		{Title: "Artist", Width: 10},
+		{Title: "Title", Width: 10},
+		{Title: "FileType", Width: 8},
+		{Title: "Genre", Width: 10},
+	}
+
+	var rows []table.Row
+	for _, track := range tracks {
+		row := []string{
+			strconv.Itoa(track.ID),
+			track.Artist,
+			track.Title,
+			track.FileType, 
+			track.Genre,
+		}
+
+		rows = append(rows, row)
+	}
+
+	t := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(7),
+	)
+
 	return model{
 		storage: store,
 		player:  player,
-		tracks:  tracks,
+		tracks:  t,
 		view:    TrackListView,
 	}
 }
@@ -41,45 +68,31 @@ func (m model) Init() tea.Cmd {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "q", "ctrl+c":
 			return m, tea.Quit
-		case "up", "k":
-			if m.selected > 0 {
-				m.selected--
-			}
-		case "down", "j":
-			m.selected++
-		case "enter", " ":
-			if len(m.tracks) > 0 {
-				track := m.tracks[m.selected]
+		case "enter":
+			if len(m.tracks.Rows()) > 0 {
+				id, _ := strconv.Atoi(m.tracks.SelectedRow()[0])
+
+				track, _ := m.storage.GetTrackByID(id)
+
 				if err := m.player.Play(&track); err != nil {
 					// TODO: error handling
 				}
 			}
 		}
 	}
-	return m, nil
+
+	m.tracks, cmd = m.tracks.Update(msg)
+
+	return m, cmd
 }
 
 func (m model) View() string {
-	if len(m.tracks) == 0 {
-		return "Загрузка треков..."
-	}
-
-	var s string
-
-	for i, track := range m.tracks {
-		cursor := " "
-		if i == m.selected {
-			cursor = ">"
-		}
-		s += fmt.Sprintf("%s %s - %s\n", cursor, track.Artist, track.Title)
-	}
-
-	s += "\nНажмите q чтобы выйти"
-
-	return s
+	return m.tracks.View() + "\n"
 }
