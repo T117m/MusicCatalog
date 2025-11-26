@@ -8,13 +8,14 @@ import (
 
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
+	gloss "github.com/charmbracelet/lipgloss"
 )
 
 type model struct {
-	storage  *storage.Storage
-	player   *player.Player
-	tracks   table.Model
-	view     ViewMode
+	storage *storage.Storage
+	player  *player.Player
+	tracks  table.Model
+	view    ViewMode
 }
 
 type ViewMode int
@@ -24,15 +25,19 @@ const (
 	PlayerView
 )
 
+var baseStyle = gloss.NewStyle().
+	BorderStyle(gloss.NormalBorder()).
+	BorderForeground(gloss.Color("240"))
+
 func New(store *storage.Storage, player *player.Player) model {
 	tracks, _ := store.GetAllTracks()
 
 	columns := []table.Column{
 		{Title: "ID", Width: 4},
-		{Title: "Artist", Width: 10},
-		{Title: "Title", Width: 10},
-		{Title: "FileType", Width: 8},
-		{Title: "Genre", Width: 10},
+		{Title: "Исполнитель", Width: 12},
+		{Title: "Название", Width: 12},
+		{Title: "Тип файла", Width: 10},
+		{Title: "Жанр", Width: 10},
 	}
 
 	var rows []table.Row
@@ -41,7 +46,7 @@ func New(store *storage.Storage, player *player.Player) model {
 			strconv.Itoa(track.ID),
 			track.Artist,
 			track.Title,
-			track.FileType, 
+			track.FileType,
 			track.Genre,
 		}
 
@@ -54,6 +59,18 @@ func New(store *storage.Storage, player *player.Player) model {
 		table.WithFocused(true),
 		table.WithHeight(7),
 	)
+
+	s := table.DefaultStyles()
+	s.Header = s.Header.
+		BorderStyle(gloss.NormalBorder()).
+		BorderForeground(gloss.Color("240")).
+		BorderBottom(true).
+		Bold(true)
+	s.Selected = s.Selected.
+		Foreground(gloss.Color("7")).
+		Background(gloss.Color("#182c25")).
+		Bold(true)
+	t.SetStyles(s)
 
 	return model{
 		storage: store,
@@ -94,5 +111,5 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	return m.tracks.View() + "\n"
+	return baseStyle.Render(m.tracks.View()) + "\n"
 }
