@@ -11,6 +11,10 @@ import (
 )
 
 func main() {
+	if _, err := tea.LogToFile("./debug/LOG", ""); err != nil {
+		log.Fatal(err)
+	}
+
 	store, err := storage.New()
 	if err != nil {
 		log.Fatalf("Ошибка инициализации хранилища: %v\n", err)
