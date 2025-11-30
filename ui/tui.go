@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/T117m/MusicCatalog/music"
 	"github.com/T117m/MusicCatalog/player"
@@ -47,6 +48,11 @@ const (
 	genre
 	ft
 	fp
+)
+
+const (
+	trackListHelp = "\nq: Выйти | a/i: Добавить трек | d: Удалить трек | r: Редактировать трек\n"
+	inputHelp     = "\nq: Вернуться | Enter: Ввод\n"
 )
 
 func New(store *storage.Storage, player *player.Player) model {
@@ -142,7 +148,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					}
 				}
 			case AddTrackView:
-				if m.focused == len(m.inputs) - 1 {
+				if m.focused == len(m.inputs)-1 {
 					m.addTrack()
 				}
 
@@ -199,24 +205,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	var s string
+	var s strings.Builder
 
 	switch m.view {
 	case TrackListView:
-		s = baseStyle.Render(m.tracks.View()) +
-			helpStyle.Render("\nq: Выйти | a/i: Добавить трек | d: Удалить трек | r: Редактировать трек\n")
+		s.WriteString(baseStyle.Render(m.tracks.View()) + helpStyle.Render(trackListHelp))
 	case AddTrackView:
-		s = baseStyle.Render(m.tracks.View()) + "\n" +
-			baseStyle.Render(fmt.Sprintf(`%s
-%s
-%s
-%s
-%s
-%s
-%s
-%s
-%s
-%s`,
+		s.WriteString(baseStyle.Render(m.tracks.View()) + "\n" + baseStyle.Render(
+			fmt.Sprintf("%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s",
 				inputHeaderStyle.Width(20).Render("Автор"),
 				inputStyle.Render(m.inputs[artist].View()),
 				inputHeaderStyle.Width(20).Render("Название"),
@@ -227,12 +223,12 @@ func (m model) View() string {
 				inputStyle.Render(m.inputs[ft].View()),
 				inputHeaderStyle.Width(30).Render("Путь к файлу"),
 				inputStyle.Render(m.inputs[fp].View()),
-			)) +
-			helpStyle.Render("\nq: Вернуться | Enter: Ввод\n")
+			)) + helpStyle.Render(inputHelp),
+		)
 	case PlayerView:
 	}
 
-	return s
+	return s.String()
 }
 
 func newTracksTable(store *storage.Storage) table.Model {
