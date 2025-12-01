@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -13,7 +12,6 @@ import (
 	"github.com/charmbracelet/bubbles/table"
 	ti "github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	gloss "github.com/charmbracelet/lipgloss"
 )
 
 type model struct {
@@ -33,63 +31,14 @@ const (
 	PlayerView
 )
 
-var (
-	baseStyle = gloss.NewStyle().BorderStyle(gloss.ThickBorder()).
-			BorderForeground(gloss.Color("7"))
-	helpStyle        = gloss.NewStyle().Foreground(gloss.Color("241"))
-	inputHeaderStyle = gloss.NewStyle().Foreground(gloss.Color("7")).Bold(true)
-	inputStyle       = gloss.NewStyle().BorderStyle(gloss.NormalBorder()).BorderBottom(true).
-				BorderForeground(gloss.Color("7"))
-)
-
-const (
-	artist = iota
-	title
-	genre
-	ft
-	fp
-)
-
-const (
-	trackListHelp = "\nq: Выйти | a/i: Добавить трек | d: Удалить трек | r: Редактировать трек\n"
-	inputHelp     = "\nq: Вернуться | Enter: Ввод\n"
-)
-
 func New(store *storage.Storage, player *player.Player) model {
-	t := newTracksTable(store)
-
-	inputs := make([]ti.Model, 5)
-
-	inputs[artist] = ti.New()
-	inputs[artist].Focus()
-	inputs[artist].CharLimit = 20
-	inputs[artist].Width = 20
-	inputs[artist].Prompt = ""
-
-	inputs[title] = ti.New()
-	inputs[title].CharLimit = 20
-	inputs[title].Width = 20
-	inputs[title].Prompt = ""
-
-	inputs[genre] = ti.New()
-	inputs[genre].CharLimit = 10
-	inputs[genre].Width = 10
-	inputs[genre].Prompt = ""
-
-	inputs[ft] = ti.New()
-	inputs[ft].CharLimit = 4
-	inputs[ft].Width = 5
-	inputs[ft].Prompt = ""
-
-	inputs[fp] = ti.New()
-	inputs[fp].CharLimit = 30
-	inputs[fp].Width = 30
-	inputs[fp].Prompt = ""
+	tracks := newTracksTable(store)
+	inputs := newInputs()
 
 	return model{
 		storage: store,
 		player:  player,
-		tracks:  t,
+		tracks:  tracks,
 		view:    TrackListView,
 		inputs:  inputs,
 		focused: 0,
@@ -150,20 +99,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case AddTrackView:
 				if m.focused == len(m.inputs)-1 {
 					m.addTrack()
+				} else {
+					m.nextInput()
 				}
-
-				m.inputs[m.focused].Blur()
-				m.nextInput()
-				m.inputs[m.focused].Focus()
 			}
 		case "tab", "ctrl+n":
 			switch m.view {
 			case AddTrackView:
-				m.inputs[m.focused].Blur()
-				if m.view == AddTrackView {
-					m.nextInput()
-				}
-				m.inputs[m.focused].Focus()
+				m.nextInput()
 			case TrackListView:
 				m.tracks.MoveDown(1)
 			}
@@ -179,8 +122,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.tracks.MoveUp(1)
 			}
 		case "a", "i":
-			m.tracks.Blur()
-			m.view = AddTrackView
+			if m.view == TrackListView {
+				m.tracks.Blur()
+				m.view = AddTrackView
+				m.resetInputs()
+		}
 		case "ctrl+s":
 			if m.view == AddTrackView {
 				m.addTrack()
@@ -209,22 +155,13 @@ func (m model) View() string {
 
 	switch m.view {
 	case TrackListView:
-		s.WriteString(baseStyle.Render(m.tracks.View()) + helpStyle.Render(trackListHelp))
+		s.WriteString(baseStyle.Render(m.tracks.View()))
+		s.WriteString(helpStyle.Render(trackListHelp))
 	case AddTrackView:
-		s.WriteString(baseStyle.Render(m.tracks.View()) + "\n" + baseStyle.Render(
-			fmt.Sprintf("%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s",
-				inputHeaderStyle.Width(20).Render("Автор"),
-				inputStyle.Render(m.inputs[artist].View()),
-				inputHeaderStyle.Width(20).Render("Название"),
-				inputStyle.Render(m.inputs[title].View()),
-				inputHeaderStyle.Width(10).Render("Жанр"),
-				inputStyle.Render(m.inputs[genre].View()),
-				inputHeaderStyle.Width(10).Render("Тип файла"),
-				inputStyle.Render(m.inputs[ft].View()),
-				inputHeaderStyle.Width(30).Render("Путь к файлу"),
-				inputStyle.Render(m.inputs[fp].View()),
-			)) + helpStyle.Render(inputHelp),
-		)
+		s.WriteString(baseStyle.Render(m.tracks.View()))
+		s.WriteString("\n")
+		s.WriteString(baseStyle.Render(renderInputForm(m.inputs)))
+		s.WriteString(helpStyle.Render(inputHelp))
 	case PlayerView:
 	}
 
@@ -236,8 +173,8 @@ func newTracksTable(store *storage.Storage) table.Model {
 
 	columns := []table.Column{
 		{Title: "ID", Width: 4},
-		{Title: "Исполнитель", Width: 12},
 		{Title: "Название", Width: 12},
+		{Title: "Исполнитель", Width: 12},
 		{Title: "Тип файла", Width: 10},
 		{Title: "Жанр", Width: 10},
 	}
@@ -246,8 +183,8 @@ func newTracksTable(store *storage.Storage) table.Model {
 	for _, track := range tracks {
 		row := []string{
 			strconv.Itoa(track.ID),
-			track.Artist,
 			track.Title,
+			track.Artist,
 			track.FileType,
 			track.Genre,
 		}
@@ -255,54 +192,11 @@ func newTracksTable(store *storage.Storage) table.Model {
 		rows = append(rows, row)
 	}
 
-	t := table.New(
-		table.WithColumns(columns),
-		table.WithRows(rows),
-		table.WithFocused(true),
-		table.WithHeight(len(rows)+1),
-	)
-
-	s := table.DefaultStyles()
-	s.Header = s.Header.
-		BorderStyle(gloss.NormalBorder()).
-		BorderForeground(gloss.Color("7")).
-		BorderBottom(true).
-		Bold(true)
-	s.Selected = s.Selected.
-		Foreground(gloss.Color("7")).
-		Background(gloss.Color("#306844")).
-		Bold(true)
-	t.SetStyles(s)
-
-	return t
-}
-
-func (m *model) nextInput() {
-	m.focused = (m.focused + 1) % len(m.inputs)
-}
-
-func (m *model) prevInput() {
-	m.focused--
-	if m.focused < 0 {
-		m.focused = len(m.inputs) - 1
-	}
-}
-
-func (m *model) quitInput() {
-	m.tracks = newTracksTable(m.storage)
-	m.focused = 0
-	m.view = TrackListView
-	m.tracks.Focus()
+	return newStyledTable(columns, rows)
 }
 
 func (m *model) addTrack() {
-	newTrack := music.New(
-		m.inputs[title].Value(),
-		m.inputs[artist].Value(),
-		m.inputs[genre].Value(),
-		m.inputs[ft].Value(),
-		m.inputs[fp].Value(),
-	)
+	newTrack := music.New(m.getInputs())
 
 	newTrack.Normalize()
 
