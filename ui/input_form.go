@@ -49,7 +49,7 @@ func (m *model) renderInputForm() string {
 		formHeader string
 		sb strings.Builder
 
-		fieldHeaders = [5]string{"Название", "Автор", "Жанр", "Тип файла", "Путь к файлу"}
+		fieldHeaders = [5]string{"Название", "Исполнитель", "Жанр", "Тип файла", "Путь к файлу"}
 
 		titleErr    = ""
 		artistErr   = ""
@@ -114,6 +114,7 @@ func (m *model) prevInput() {
 func (m *model) quitInput() {
 	m.resetInputs()
 	m.inputs[m.focused].Blur()
+	m.errMsg = nil
 	m.view = TrackListView
 	m.tracks.Focus()
 }

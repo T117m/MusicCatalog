@@ -62,8 +62,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			return m, tea.Quit
 		case "q":
-			if m.view == TrackListView {
+			switch m.view {
+			case TrackListView:
 				return m, tea.Quit
+			case DeleteTrackView:
+				m.view = TrackListView
+				m.tracks.Focus()
 			}
 		case "esc":
 			switch m.view {
@@ -71,6 +75,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, tea.Quit
 			case AddTrackView:
 				m.quitInput()
+			case DeleteTrackView:
+				m.view = TrackListView
+				m.tracks.Focus()
 			}
 		case "enter":
 			switch m.view {
@@ -143,6 +150,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.tracks.Blur()
 				m.view = DeleteTrackView
 			}
+		case "n":
+			if m.view == DeleteTrackView {
+				m.view = TrackListView
+				m.tracks.Focus()
+			}
+		case "y":
+			if m.view == DeleteTrackView && m.errMsg == nil {
+				m.removeTrack()
+			}
 		}
 	}
 
@@ -179,14 +195,14 @@ func (m model) View() string {
 				baseStyle.Render(m.tracks.View()),
 				baseStyle.Width(30).Render(m.renderInputForm()),
 			))
-		sb.WriteString(helpStyle.Render(inputHelp))
+		sb.WriteString(gloss.PlaceHorizontal(
+			148,
+			gloss.Center,
+			helpStyle.Render(inputHelp),
+		))
 	case DeleteTrackView:
-		sb.WriteString(
-			gloss.JoinHorizontal(
-				gloss.Top,
-				baseStyle.Render(m.tracks.View()),
-				m.renderDeletePrompt(),
-			))
+		sb.WriteString(m.renderDeletePrompt())
+		sb.WriteString(helpStyle.Render(deleteHelp))
 	case PlayerView:
 	}
 
@@ -204,11 +220,26 @@ func (m *model) addTrack() {
 			m.setFocus(fp)
 		}
 	} else if err := m.storage.AddTrack(&newTrack); err != nil {
-			m.errMsg = err
-			m.setFocus(fp)
+		m.errMsg = err
+		m.setFocus(fp)
 	} else {
+		m.errMsg = nil
 		m.tracks = newTrackList(m.storage)
-		
+
 		m.quitInput()
+	}
+}
+
+func (m *model) removeTrack() {
+	id, _ := strconv.Atoi(m.tracks.SelectedRow()[0])
+
+	if err := m.storage.RemoveTrackByID(id); err != nil {
+		m.errMsg = err
+	} else {
+		m.errMsg = nil
+		m.tracks = newTrackList(m.storage)
+		m.view = TrackListView
+
+		m.tracks.Focus()
 	}
 }

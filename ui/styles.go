@@ -11,12 +11,12 @@ var (
 			BorderForeground(gloss.Color("7")).
 			Foreground(gloss.Color("7"))
 	deleteStyle = gloss.NewStyle().
-			Foreground(gloss.Color("1")).
+			Foreground(gloss.Color("#FF746C")).
 			BorderStyle(gloss.ThickBorder()).
-			BorderForeground(gloss.Color("1")).
+			BorderForeground(gloss.Color("#FF746C")).
 			Bold(true)
 	errorStyle = gloss.NewStyle().
-			Foreground(gloss.Color("1")).
+			Foreground(gloss.Color("#FF746C")).
 			Bold(true)
 	helpStyle = gloss.NewStyle().
 			Foreground(gloss.Color("241"))
@@ -30,8 +30,9 @@ var (
 )
 
 const (
-	trackListHelp = "\nq: Выйти | Shift+a: Добавить трек | Shift+d: Удалить трек | r: Редактировать трек\n"
-	inputHelp     = "\nq: Вернуться | Enter: Ввод\n"
+	trackListHelp = "\nq: Выйти | Ctrl+a: Добавить трек | x: Удалить трек | Enter: Включить/Выключить трек\n"
+	inputHelp     = "\nEsc: Вернуться | Enter: Ввод\n"
+	deleteHelp    = "\nEsc/q: Вернутся\n"
 )
 
 func newStyledTable(columns []table.Column, rows []table.Row) table.Model {
