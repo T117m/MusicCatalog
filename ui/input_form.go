@@ -61,6 +61,8 @@ func (m *model) renderInputForm() string {
 	switch m.view {
 	case AddTrackView:
 		formHeader = "Добавление трека\n"
+	case EditTrackView:
+		formHeader = "Редактирование трека\n"
 	}
 
 	if m.errMsg != nil {

@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"log"
 	"strconv"
 	"strings"
 
@@ -30,6 +31,7 @@ const (
 	TrackListView ViewMode = iota
 	AddTrackView
 	DeleteTrackView
+	EditTrackView
 	PlayerView
 )
 
@@ -69,6 +71,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.view = TrackListView
 				m.tracks.Focus()
 			}
+		case "ctrl+r":
+			if m.view == TrackListView {
+				m.tracks.Blur()
+				m.view = EditTrackView
+				cmd := m.inputs[m.focused].Focus()
+				cmds = append(cmds, cmd)
+			}
 		case "esc":
 			switch m.view {
 			case TrackListView:
@@ -78,6 +87,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case DeleteTrackView:
 				m.view = TrackListView
 				m.tracks.Focus()
+			case EditTrackView:
+				m.quitInput()
 			}
 		case "enter":
 			switch m.view {
@@ -105,6 +116,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 							m.player.Play(&track)
 						}
 					default:
+						//m.player.Wait()
 						m.player.Play(&track)
 					}
 				}
@@ -114,21 +126,25 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				} else {
 					m.nextInput()
 				}
+			case EditTrackView:
+				if m.focused == len(m.inputs)-1 {
+					m.editTrack()
+				} else {
+					m.nextInput()
+				}
 			}
 		case "tab", "ctrl+n":
 			switch m.view {
-			case AddTrackView:
+			case AddTrackView, EditTrackView:
 				m.nextInput()
 			case TrackListView:
 				m.tracks.MoveDown(1)
 			}
 		case "shift+tab", "ctrl+p":
 			switch m.view {
-			case AddTrackView:
+			case AddTrackView, EditTrackView:
 				m.inputs[m.focused].Blur()
-				if m.view == AddTrackView {
-					m.prevInput()
-				}
+				m.prevInput()
 				cmd := m.inputs[m.focused].Focus()
 				cmds = append(cmds, cmd)
 			case TrackListView:
@@ -168,7 +184,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.tracks, cmd = m.tracks.Update(msg)
 
 		return m, cmd
-	case AddTrackView:
+	case AddTrackView, EditTrackView:
 		for i := range m.inputs {
 			var cmd tea.Cmd
 			m.inputs[i], cmd = m.inputs[i].Update(msg)
@@ -196,14 +212,27 @@ func (m model) View() string {
 				baseStyle.Width(30).Render(m.renderInputForm()),
 			))
 		sb.WriteString(gloss.PlaceHorizontal(
-			148,
-			gloss.Center,
+			gloss.Width(baseStyle.Render(m.tracks.View()))+
+				gloss.Width(helpStyle.Render(inputHelp)),
+			gloss.Right,
 			helpStyle.Render(inputHelp),
 		))
 	case DeleteTrackView:
 		sb.WriteString(m.renderDeletePrompt())
 		sb.WriteString(helpStyle.Render(deleteHelp))
-	case PlayerView:
+	case EditTrackView:
+		sb.WriteString(
+			gloss.JoinHorizontal(
+				gloss.Top,
+				baseStyle.Render(m.tracks.View()),
+				baseStyle.Width(30).Render(m.renderInputForm()),
+			))
+		sb.WriteString(gloss.PlaceHorizontal(
+			gloss.Width(baseStyle.Render(m.tracks.View()))+
+				gloss.Width(helpStyle.Render(inputHelp)),
+			gloss.Right,
+			helpStyle.Render(inputHelp),
+		))
 	}
 
 	return sb.String()
@@ -241,5 +270,25 @@ func (m *model) removeTrack() {
 		m.view = TrackListView
 
 		m.tracks.Focus()
+	}
+}
+
+func (m *model) editTrack() {
+	id, _ := strconv.Atoi(m.tracks.SelectedRow()[0])
+	newTitle, newArtist, newGenre, newFT, newFP := m.getInputs()
+
+	if err := m.storage.EditTrackByID(id, newTitle, newArtist, newGenre, newFT, newFP); err != nil {
+		m.errMsg = err
+
+		if err == music.ErrEmptyFilePath || err == music.ErrUnsupportedFormat {
+			m.setFocus(fp)
+		} else {
+			log.Fatal(err)
+		}
+	} else {
+		m.errMsg = nil
+		m.tracks = newTrackList(m.storage)
+
+		m.quitInput()
 	}
 }

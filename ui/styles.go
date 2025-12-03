@@ -30,8 +30,8 @@ var (
 )
 
 const (
-	trackListHelp = "\nq: Выйти | Ctrl+a: Добавить трек | x: Удалить трек | Enter: Включить/Выключить трек\n"
-	inputHelp     = "\nEsc: Вернуться | Enter: Ввод\n"
+	trackListHelp = "\nq: Выйти | Ctrl+a: Добавить трек | x: Удалить трек\nCtrl+r: Редактировать трек | Enter: Включить/Выключить трек\n"
+	inputHelp     = "\nEsc: Вернуться | Enter: Ввод | Ctrl+s: Сохранить\n"
 	deleteHelp    = "\nEsc/q: Вернутся\n"
 )
 
