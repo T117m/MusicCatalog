@@ -29,6 +29,7 @@ type ViewMode int
 const (
 	TrackListView ViewMode = iota
 	AddTrackView
+	DeleteTrackView
 	PlayerView
 )
 
@@ -126,7 +127,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case TrackListView:
 				m.tracks.MoveUp(1)
 			}
-		case "a", "i":
+		case "ctrl+a":
 			if m.view == TrackListView {
 				m.tracks.Blur()
 				m.view = AddTrackView
@@ -136,6 +137,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+s":
 			if m.view == AddTrackView {
 				m.addTrack()
+			}
+		case "x":
+			if m.view == TrackListView {
+				m.tracks.Blur()
+				m.view = DeleteTrackView
 			}
 		}
 	}
@@ -160,19 +166,31 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	var s strings.Builder
+	var sb strings.Builder
 
 	switch m.view {
 	case TrackListView:
-		s.WriteString(baseStyle.Render(m.tracks.View()))
-		s.WriteString(helpStyle.Render(trackListHelp))
+		sb.WriteString(baseStyle.Render(m.tracks.View()))
+		sb.WriteString(helpStyle.Render(trackListHelp))
 	case AddTrackView:
-		s.WriteString(gloss.JoinHorizontal(gloss.Top, baseStyle.Render(m.tracks.View()), baseStyle.Render(m.renderInputForm())))
-		s.WriteString(helpStyle.Render(inputHelp))
+		sb.WriteString(
+			gloss.JoinHorizontal(
+				gloss.Top,
+				baseStyle.Render(m.tracks.View()),
+				baseStyle.Width(30).Render(m.renderInputForm()),
+			))
+		sb.WriteString(helpStyle.Render(inputHelp))
+	case DeleteTrackView:
+		sb.WriteString(
+			gloss.JoinHorizontal(
+				gloss.Top,
+				baseStyle.Render(m.tracks.View()),
+				m.renderDeletePrompt(),
+			))
 	case PlayerView:
 	}
 
-	return s.String()
+	return sb.String()
 }
 
 func (m *model) addTrack() {
@@ -185,8 +203,12 @@ func (m *model) addTrack() {
 			m.errMsg = err
 			m.setFocus(fp)
 		}
+	} else if err := m.storage.AddTrack(&newTrack); err != nil {
+			m.errMsg = err
+			m.setFocus(fp)
 	} else {
-		m.storage.AddTrack(&newTrack)
+		m.tracks = newTrackList(m.storage)
+		
 		m.quitInput()
 	}
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/T117m/MusicCatalog/music"
 
+	gloss "github.com/charmbracelet/lipgloss"
 	ti "github.com/charmbracelet/bubbles/textinput"
 )
 
@@ -20,15 +21,15 @@ func newInputs() []ti.Model {
 	inputs := make([]ti.Model, 5)
 
 	inputs[title] = ti.New()
-	inputs[title].Width = 20
+	inputs[title].Width = 27
 	inputs[title].Prompt = ""
 
 	inputs[artist] = ti.New()
-	inputs[artist].Width = 20
+	inputs[artist].Width = 27
 	inputs[artist].Prompt = ""
 
 	inputs[genre] = ti.New()
-	inputs[genre].Width = 10
+	inputs[genre].Width = 27
 	inputs[genre].Prompt = ""
 
 	inputs[ft] = ti.New()
@@ -37,7 +38,7 @@ func newInputs() []ti.Model {
 	inputs[ft].Prompt = ""
 
 	inputs[fp] = ti.New()
-	inputs[fp].Width = 30
+	inputs[fp].Width = 27
 	inputs[fp].Prompt = ""
 
 	return inputs
@@ -45,12 +46,22 @@ func newInputs() []ti.Model {
 
 func (m *model) renderInputForm() string {
 	var (
+		formHeader string
+		sb strings.Builder
+
+		fieldHeaders = [5]string{"Название", "Автор", "Жанр", "Тип файла", "Путь к файлу"}
+
 		titleErr    = ""
 		artistErr   = ""
 		genreErr    = ""
 		fileTypeErr = ""
 		filePathErr = ""
 	)
+
+	switch m.view {
+	case AddTrackView:
+		formHeader = "Добавление трека\n"
+	}
 
 	if m.errMsg != nil {
 		switch m.errMsg {
@@ -64,21 +75,16 @@ func (m *model) renderInputForm() string {
 			filePathErr = "! Путь к файлу не может быть пустым!"
 		case music.ErrUnsupportedFormat:
 			fileTypeErr = "! Неподдерживаемый тип файла!"
-			filePathErr = "! Возможно указан не првильный путь!"
+			filePathErr = "! Возможно указан неправильный путь!"
 		}
 	}
 
-	var (
-		headers = [5]string{"Название", "Автор", "Жанр", "Тип файла", "Путь к файлу"}
-		errs = [5]string{titleErr, artistErr, genreErr, fileTypeErr, filePathErr}
+	errs := [5]string{titleErr, artistErr, genreErr, fileTypeErr, filePathErr}
 
-		sb strings.Builder
-	)
-
-	sb.WriteString(inputHeaderStyle.Render("Добавление трека\n"))
+	sb.WriteString(gloss.PlaceHorizontal(30, gloss.Center, inputHeaderStyle.Render(formHeader)))
 
 	for i, input := range m.inputs {
-		writeInputField(&sb, headers[i], errs[i], &input)
+		writeInputField(&sb, fieldHeaders[i], errs[i], &input)
 	}
 
 	return sb.String()

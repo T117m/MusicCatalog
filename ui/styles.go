@@ -8,7 +8,13 @@ import (
 var (
 	baseStyle = gloss.NewStyle().
 			BorderStyle(gloss.ThickBorder()).
-			BorderForeground(gloss.Color("7"))
+			BorderForeground(gloss.Color("7")).
+			Foreground(gloss.Color("7"))
+	deleteStyle = gloss.NewStyle().
+			Foreground(gloss.Color("1")).
+			BorderStyle(gloss.ThickBorder()).
+			BorderForeground(gloss.Color("1")).
+			Bold(true)
 	errorStyle = gloss.NewStyle().
 			Foreground(gloss.Color("1")).
 			Bold(true)
@@ -24,7 +30,7 @@ var (
 )
 
 const (
-	trackListHelp = "\nq: Выйти | a/i: Добавить трек | d: Удалить трек | r: Редактировать трек\n"
+	trackListHelp = "\nq: Выйти | Shift+a: Добавить трек | Shift+d: Удалить трек | r: Редактировать трек\n"
 	inputHelp     = "\nq: Вернуться | Enter: Ввод\n"
 )
 
