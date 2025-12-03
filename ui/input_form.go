@@ -1,7 +1,9 @@
 package ui
 
 import (
-	"fmt"
+	"strings"
+
+	"github.com/T117m/MusicCatalog/music"
 
 	ti "github.com/charmbracelet/bubbles/textinput"
 )
@@ -18,46 +20,76 @@ func newInputs() []ti.Model {
 	inputs := make([]ti.Model, 5)
 
 	inputs[title] = ti.New()
-	inputs[title].CharLimit = 20
 	inputs[title].Width = 20
 	inputs[title].Prompt = ""
 
 	inputs[artist] = ti.New()
-	inputs[artist].CharLimit = 20
 	inputs[artist].Width = 20
 	inputs[artist].Prompt = ""
 
 	inputs[genre] = ti.New()
-	inputs[genre].CharLimit = 10
 	inputs[genre].Width = 10
 	inputs[genre].Prompt = ""
 
 	inputs[ft] = ti.New()
 	inputs[ft].CharLimit = 4
-	inputs[ft].Width = 5
+	inputs[ft].Width = 4
 	inputs[ft].Prompt = ""
 
 	inputs[fp] = ti.New()
-	inputs[fp].CharLimit = 30
 	inputs[fp].Width = 30
 	inputs[fp].Prompt = ""
 
 	return inputs
 }
 
-func renderInputForm(inputs []ti.Model) string {
-	return fmt.Sprintf("%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s",
-		inputHeaderStyle.Width(20).Render("Название"),
-		inputStyle.Render(inputs[title].View()),
-		inputHeaderStyle.Width(20).Render("Автор"),
-		inputStyle.Render(inputs[artist].View()),
-		inputHeaderStyle.Width(10).Render("Жанр"),
-		inputStyle.Render(inputs[genre].View()),
-		inputHeaderStyle.Width(10).Render("Тип файла"),
-		inputStyle.Render(inputs[ft].View()),
-		inputHeaderStyle.Width(30).Render("Путь к файлу"),
-		inputStyle.Render(inputs[fp].View()),
+func (m *model) renderInputForm() string {
+	var (
+		titleErr    = ""
+		artistErr   = ""
+		genreErr    = ""
+		fileTypeErr = ""
+		filePathErr = ""
 	)
+
+	if m.errMsg != nil {
+		switch m.errMsg {
+		case music.ErrEmptyTitle:
+			titleErr = "! Название не может быть пустым!"
+		case music.ErrEmptyArtist:
+			artistErr = "! Поле автора не может быть пустым!"
+		case music.ErrEmptyFileType:
+			fileTypeErr = "! Тип файла не может быть пустым!"
+		case music.ErrEmptyFilePath:
+			filePathErr = "! Путь к файлу не может быть пустым!"
+		case music.ErrUnsupportedFormat:
+			fileTypeErr = "! Неподдерживаемый тип файла!"
+			filePathErr = "! Возможно указан не првильный путь!"
+		}
+	}
+
+	var (
+		headers = [5]string{"Название", "Автор", "Жанр", "Тип файла", "Путь к файлу"}
+		errs = [5]string{titleErr, artistErr, genreErr, fileTypeErr, filePathErr}
+
+		sb strings.Builder
+	)
+
+	sb.WriteString(inputHeaderStyle.Render("Добавление трека\n"))
+
+	for i, input := range m.inputs {
+		writeInputField(&sb, headers[i], errs[i], &input)
+	}
+
+	return sb.String()
+}
+
+func writeInputField(sb *strings.Builder, header, err string, input *ti.Model) {
+	sb.WriteString("\n")
+	sb.WriteString(inputHeaderStyle.Render(header))
+	sb.WriteString(errorStyle.Render(err))
+	sb.WriteString("\n")
+	sb.WriteString(inputStyle.Render(input.View()))
 }
 
 func (m *model) nextInput() {
@@ -74,8 +106,8 @@ func (m *model) prevInput() {
 }
 
 func (m *model) quitInput() {
-	m.tracks = newTracksTable(m.storage)
-	m.focused = 0
+	m.resetInputs()
+	m.inputs[m.focused].Blur()
 	m.view = TrackListView
 	m.tracks.Focus()
 }
@@ -100,6 +132,5 @@ func (m *model) resetInputs() {
 		m.inputs[i].Reset()
 	}
 
-	m.focused = 0
-	m.inputs[m.focused].Focus()
+	m.setFocus(0)
 }

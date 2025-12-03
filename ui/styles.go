@@ -6,12 +6,21 @@ import (
 )
 
 var (
-	baseStyle = gloss.NewStyle().BorderStyle(gloss.ThickBorder()).
+	baseStyle = gloss.NewStyle().
+			BorderStyle(gloss.ThickBorder()).
 			BorderForeground(gloss.Color("7"))
-	helpStyle        = gloss.NewStyle().Foreground(gloss.Color("241"))
-	inputHeaderStyle = gloss.NewStyle().Foreground(gloss.Color("7")).Bold(true)
-	inputStyle       = gloss.NewStyle().BorderStyle(gloss.NormalBorder()).BorderBottom(true).
-				BorderForeground(gloss.Color("7"))
+	errorStyle = gloss.NewStyle().
+			Foreground(gloss.Color("1")).
+			Bold(true)
+	helpStyle = gloss.NewStyle().
+			Foreground(gloss.Color("241"))
+	inputHeaderStyle = gloss.NewStyle().
+				Foreground(gloss.Color("7")).
+				Bold(true)
+	inputStyle = gloss.NewStyle().
+			BorderStyle(gloss.NormalBorder()).
+			BorderBottom(true).
+			BorderForeground(gloss.Color("7"))
 )
 
 const (
@@ -31,12 +40,10 @@ func newStyledTable(columns []table.Column, rows []table.Row) table.Model {
 	s.Header = s.Header.
 		BorderStyle(gloss.NormalBorder()).
 		BorderForeground(gloss.Color("7")).
-		BorderBottom(true).
-		Bold(true)
+		BorderBottom(true)
 	s.Selected = s.Selected.
-		Foreground(gloss.Color("7")).
 		Background(gloss.Color("#306844")).
-		Bold(true)
+		Foreground(gloss.Color("7"))
 	t.SetStyles(s)
 
 	return t

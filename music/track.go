@@ -37,12 +37,12 @@ func (t Track) Validate() error {
 		return ErrEmptyGenre
 	}
 
-	if t.FileType == "" {
-		return ErrEmptyFileType
-	}
-
 	if strings.TrimSpace(t.FilePath) == "" {
 		return ErrEmptyFilePath
+	}
+
+	if t.FileType == "" {
+		return ErrEmptyFileType
 	}
 
 	if !t.IsSupportedFormat() {

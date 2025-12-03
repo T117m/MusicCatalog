@@ -11,9 +11,7 @@ import (
 )
 
 func main() {
-	if _, err := tea.LogToFile("./debug/LOG", ""); err != nil {
-		log.Fatal(err)
-	}
+	tea.LogToFile("./debug/LOG", "")
 
 	store, err := storage.New()
 	if err != nil {

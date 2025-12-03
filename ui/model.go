@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"log"
 	"strconv"
 	"strings"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/charmbracelet/bubbles/table"
 	ti "github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	gloss "github.com/charmbracelet/lipgloss"
 )
 
 type model struct {
@@ -21,6 +21,7 @@ type model struct {
 	view    ViewMode
 	inputs  []ti.Model
 	focused int
+	errMsg  error
 }
 
 type ViewMode int
@@ -32,7 +33,7 @@ const (
 )
 
 func New(store *storage.Storage, player *player.Player) model {
-	tracks := newTracksTable(store)
+	tracks := newTrackList(store)
 	inputs := newInputs()
 
 	return model{
@@ -51,7 +52,6 @@ func (m model) Init() tea.Cmd {
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
-		cmd  tea.Cmd
 		cmds = make([]tea.Cmd, len(m.inputs))
 	)
 
@@ -61,6 +61,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			return m, tea.Quit
 		case "q":
+			if m.view == TrackListView {
+				return m, tea.Quit
+			}
+		case "esc":
 			switch m.view {
 			case TrackListView:
 				return m, tea.Quit
@@ -117,7 +121,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if m.view == AddTrackView {
 					m.prevInput()
 				}
-				m.inputs[m.focused].Focus()
+				cmd := m.inputs[m.focused].Focus()
+				cmds = append(cmds, cmd)
 			case TrackListView:
 				m.tracks.MoveUp(1)
 			}
@@ -125,8 +130,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.view == TrackListView {
 				m.tracks.Blur()
 				m.view = AddTrackView
-				m.resetInputs()
-		}
+				cmd := m.inputs[m.focused].Focus()
+				cmds = append(cmds, cmd)
+			}
 		case "ctrl+s":
 			if m.view == AddTrackView {
 				m.addTrack()
@@ -136,12 +142,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch m.view {
 	case TrackListView:
+		var cmd tea.Cmd
 		m.tracks, cmd = m.tracks.Update(msg)
 
 		return m, cmd
 	case AddTrackView:
 		for i := range m.inputs {
-			m.inputs[i], cmds[i] = m.inputs[i].Update(msg)
+			var cmd tea.Cmd
+			m.inputs[i], cmd = m.inputs[i].Update(msg)
+			cmds = append(cmds, cmd)
 		}
 
 		return m, tea.Batch(cmds...)
@@ -158,41 +167,12 @@ func (m model) View() string {
 		s.WriteString(baseStyle.Render(m.tracks.View()))
 		s.WriteString(helpStyle.Render(trackListHelp))
 	case AddTrackView:
-		s.WriteString(baseStyle.Render(m.tracks.View()))
-		s.WriteString("\n")
-		s.WriteString(baseStyle.Render(renderInputForm(m.inputs)))
+		s.WriteString(gloss.JoinHorizontal(gloss.Top, baseStyle.Render(m.tracks.View()), baseStyle.Render(m.renderInputForm())))
 		s.WriteString(helpStyle.Render(inputHelp))
 	case PlayerView:
 	}
 
 	return s.String()
-}
-
-func newTracksTable(store *storage.Storage) table.Model {
-	tracks, _ := store.GetAllTracks()
-
-	columns := []table.Column{
-		{Title: "ID", Width: 4},
-		{Title: "Название", Width: 12},
-		{Title: "Исполнитель", Width: 12},
-		{Title: "Тип файла", Width: 10},
-		{Title: "Жанр", Width: 10},
-	}
-
-	var rows []table.Row
-	for _, track := range tracks {
-		row := []string{
-			strconv.Itoa(track.ID),
-			track.Title,
-			track.Artist,
-			track.FileType,
-			track.Genre,
-		}
-
-		rows = append(rows, row)
-	}
-
-	return newStyledTable(columns, rows)
 }
 
 func (m *model) addTrack() {
@@ -201,10 +181,12 @@ func (m *model) addTrack() {
 	newTrack.Normalize()
 
 	if err := newTrack.Validate(); err != nil {
-		log.Fatal(err)
+		if err == music.ErrEmptyFilePath || err == music.ErrUnsupportedFormat {
+			m.errMsg = err
+			m.setFocus(fp)
+		}
+	} else {
+		m.storage.AddTrack(&newTrack)
 		m.quitInput()
 	}
-
-	m.storage.AddTrack(&newTrack)
-	m.quitInput()
 }
