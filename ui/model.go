@@ -10,6 +10,7 @@ import (
 	"github.com/T117m/MusicCatalog/storage"
 
 	"github.com/charmbracelet/bubbles/table"
+	"github.com/charmbracelet/bubbles/key"
 	ti "github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	gloss "github.com/charmbracelet/lipgloss"
@@ -32,7 +33,6 @@ const (
 	AddTrackView
 	DeleteTrackView
 	EditTrackView
-	PlayerView
 )
 
 func New(store *storage.Storage, player *player.Player) model {
@@ -55,44 +55,44 @@ func (m model) Init() tea.Cmd {
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
+		cmd  tea.Cmd
 		cmds = make([]tea.Cmd, len(m.inputs))
 	)
+	m.tracks, cmd = m.tracks.Update(msg)
+	cmds = append(cmds, cmd)
+	m.inputs[m.focused], cmd = m.inputs[m.focused].Update(msg)
+	cmds = append(cmds, cmd)
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c":
+		
+		if pressed := msg.String(); pressed == "ctrl+c" {
 			return m, tea.Quit
-		case "q":
-			switch m.view {
-			case TrackListView:
+		}
+
+		switch m.view {
+		case TrackListView:
+			switch {
+			case key.Matches(msg, trackListKeyMap.next):
+				m.tracks.MoveDown(1)
+			case key.Matches(msg, trackListKeyMap.prev):
+				m.tracks.MoveUp(1)
+			case key.Matches(msg, trackListKeyMap.quit):
 				return m, tea.Quit
-			case DeleteTrackView:
-				m.view = TrackListView
-				m.tracks.Focus()
-			}
-		case "ctrl+r":
-			if m.view == TrackListView {
+			case key.Matches(msg, trackListKeyMap.add):
+				m.tracks.Blur()
+				m.view = AddTrackView
+				cmd := m.inputs[m.focused].Focus()
+				cmds = append(cmds, cmd)
+			case key.Matches(msg, trackListKeyMap.edit):
 				m.tracks.Blur()
 				m.view = EditTrackView
 				cmd := m.inputs[m.focused].Focus()
 				cmds = append(cmds, cmd)
-			}
-		case "esc":
-			switch m.view {
-			case TrackListView:
-				return m, tea.Quit
-			case AddTrackView:
-				m.quitInput()
-			case DeleteTrackView:
-				m.view = TrackListView
-				m.tracks.Focus()
-			case EditTrackView:
-				m.quitInput()
-			}
-		case "enter":
-			switch m.view {
-			case TrackListView:
+			case key.Matches(msg, trackListKeyMap.delete):
+				m.tracks.Blur()
+				m.view = DeleteTrackView
+			case msg.String() == "enter":
 				if len(m.tracks.Rows()) > 0 {
 					id, _ := strconv.Atoi(m.tracks.SelectedRow()[0])
 
@@ -120,81 +120,49 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						m.player.Play(&track)
 					}
 				}
-			case AddTrackView:
-				if m.focused == len(m.inputs)-1 {
-					m.addTrack()
-				} else {
-					m.nextInput()
-				}
-			case EditTrackView:
-				if m.focused == len(m.inputs)-1 {
-					m.editTrack()
-				} else {
-					m.nextInput()
-				}
 			}
-		case "tab", "ctrl+n":
-			switch m.view {
-			case AddTrackView, EditTrackView:
+		case AddTrackView:
+			switch {
+			case key.Matches(msg, addTrackKeyMap.next):
 				m.nextInput()
-			case TrackListView:
-				m.tracks.MoveDown(1)
-			}
-		case "shift+tab", "ctrl+p":
-			switch m.view {
-			case AddTrackView, EditTrackView:
+			case key.Matches(msg, addTrackKeyMap.prev):
 				m.inputs[m.focused].Blur()
 				m.prevInput()
-				cmd := m.inputs[m.focused].Focus()
+				cmd = m.inputs[m.focused].Focus()
 				cmds = append(cmds, cmd)
-			case TrackListView:
-				m.tracks.MoveUp(1)
-			}
-		case "ctrl+a":
-			if m.view == TrackListView {
-				m.tracks.Blur()
-				m.view = AddTrackView
-				cmd := m.inputs[m.focused].Focus()
-				cmds = append(cmds, cmd)
-			}
-		case "ctrl+s":
-			if m.view == AddTrackView {
+			case key.Matches(msg, addTrackKeyMap.quit):
+				m.quitInput()
+			case key.Matches(msg, addTrackKeyMap.add):
 				m.addTrack()
 			}
-		case "x":
-			if m.view == TrackListView {
-				m.tracks.Blur()
-				m.view = DeleteTrackView
+		case EditTrackView:
+			switch {
+			case key.Matches(msg, editTrackKeyMap.next):
+				m.nextInput()
+			case key.Matches(msg, editTrackKeyMap.prev):
+				m.inputs[m.focused].Blur()
+				m.prevInput()
+				cmd = m.inputs[m.focused].Focus()
+				cmds = append(cmds, cmd)
+			case key.Matches(msg, editTrackKeyMap.quit):
+				m.quitInput()
+			case key.Matches(msg, editTrackKeyMap.edit):
+				m.editTrack()
 			}
-		case "n":
-			if m.view == DeleteTrackView {
+		case DeleteTrackView:
+			switch {
+			case key.Matches(msg, deleteTrackKeyMap.quit):
 				m.view = TrackListView
 				m.tracks.Focus()
-			}
-		case "y":
-			if m.view == DeleteTrackView && m.errMsg == nil {
+			case key.Matches(msg, deleteTrackKeyMap.delete):
+				if m.errMsg == nil {
 				m.removeTrack()
+				}
 			}
 		}
 	}
 
-	switch m.view {
-	case TrackListView:
-		var cmd tea.Cmd
-		m.tracks, cmd = m.tracks.Update(msg)
-
-		return m, cmd
-	case AddTrackView, EditTrackView:
-		for i := range m.inputs {
-			var cmd tea.Cmd
-			m.inputs[i], cmd = m.inputs[i].Update(msg)
-			cmds = append(cmds, cmd)
-		}
-
-		return m, tea.Batch(cmds...)
-	}
-
-	return m, nil
+	return m, tea.Batch(cmds...)
 }
 
 func (m model) View() string {

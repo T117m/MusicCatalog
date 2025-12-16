@@ -5,9 +5,9 @@ import (
 )
 
 type keymap struct {
-	next, prev             key.Binding
-	quit                   key.Binding
-	insert, update, remove key.Binding
+	next, prev        key.Binding
+	quit              key.Binding
+	add, edit, delete key.Binding
 }
 
 var (
@@ -21,20 +21,20 @@ var (
 			key.WithHelp("S-Tab/C-n", "Предыдущий трек"),
 		),
 		quit: key.NewBinding(
-			key.WithKeys("esc", "ctrl-c"),
-			key.WithHelp("Esc/C-c", "Закрыть программу"),
+			key.WithKeys("esc", "q"),
+			key.WithHelp("Esc/q", "Закрыть программу"),
 		),
-		insert: key.NewBinding(
-			key.WithKeys("ctrl-a"),
+		add: key.NewBinding(
+			key.WithKeys("ctrl+a"),
 			key.WithHelp("C-a", "Добавить трек"),
 		),
-		update: key.NewBinding(
-			key.WithKeys("ctrl-r"),
+		edit: key.NewBinding(
+			key.WithKeys("ctrl+r"),
 			key.WithHelp("C-r", "Редактировать трек"),
 		),
-		remove: key.NewBinding(
+		delete: key.NewBinding(
 			key.WithKeys("x"),
-			key.WithHelp("C-r", "Редактировать трек"),
+			key.WithHelp("x", "Удалить трек"),
 		),
 	}
 
@@ -51,14 +51,14 @@ var (
 			key.WithKeys("esc"),
 			key.WithHelp("Esc", "Отмена"),
 		),
-		insert: key.NewBinding(
+		add: key.NewBinding(
 			key.WithKeys("ctrl-s"),
 			key.WithHelp("C-s", "Сохранить"),
 		),
-		update: key.NewBinding(
+		edit: key.NewBinding(
 			key.WithDisabled(),
 		),
-		remove: key.NewBinding(
+		delete: key.NewBinding(
 			key.WithDisabled(),
 		),
 	}
@@ -76,14 +76,14 @@ var (
 			key.WithKeys("esc"),
 			key.WithHelp("Esc", "Отмена"),
 		),
-		insert: key.NewBinding(
+		add: key.NewBinding(
 			key.WithDisabled(),
 		),
-		update: key.NewBinding(
+		edit: key.NewBinding(
 			key.WithKeys("ctrl-s"),
 			key.WithHelp("C-s", "Сохранить изменения"),
 		),
-		remove: key.NewBinding(
+		delete: key.NewBinding(
 			key.WithDisabled(),
 		),
 	}
@@ -96,16 +96,16 @@ var (
 			key.WithDisabled(),
 		),
 		quit: key.NewBinding(
-			key.WithKeys("n"),
-			key.WithHelp("n", "Отмена"),
+			key.WithKeys("n", "esc", "q"),
+			key.WithHelp("n/Esc/q", "Отмена"),
 		),
-		insert: key.NewBinding(
+		add: key.NewBinding(
 			key.WithDisabled(),
 		),
-		update: key.NewBinding(
+		edit: key.NewBinding(
 			key.WithDisabled(),
 		),
-		remove: key.NewBinding(
+		delete: key.NewBinding(
 			key.WithKeys("y"),
 			key.WithHelp("y", "Удалить трек"),
 		),
