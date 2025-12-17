@@ -2,11 +2,13 @@ package ui
 
 import (
 	"strings"
+	"errors"
 
 	"github.com/T117m/MusicCatalog/music"
+	"github.com/T117m/MusicCatalog/storage"
 
-	gloss "github.com/charmbracelet/lipgloss"
 	ti "github.com/charmbracelet/bubbles/textinput"
+	gloss "github.com/charmbracelet/lipgloss"
 )
 
 const (
@@ -47,7 +49,7 @@ func newInputs() []ti.Model {
 func (m *model) renderInputForm() string {
 	var (
 		formHeader string
-		sb strings.Builder
+		sb         strings.Builder
 
 		fieldHeaders = [5]string{"Название", "Исполнитель", "Жанр", "Тип файла", "Путь к файлу"}
 
@@ -56,6 +58,7 @@ func (m *model) renderInputForm() string {
 		genreErr    = ""
 		fileTypeErr = ""
 		filePathErr = ""
+		defaultErr  = ""
 	)
 
 	switch m.view {
@@ -66,18 +69,28 @@ func (m *model) renderInputForm() string {
 	}
 
 	if m.errMsg != nil {
-		switch m.errMsg {
-		case music.ErrEmptyTitle:
+		switch {
+		case errors.Is(m.errMsg, music.ErrEmptyTitle):
 			titleErr = "! Название не может быть пустым!"
-		case music.ErrEmptyArtist:
+		case errors.Is(m.errMsg, music.ErrEmptyArtist):
 			artistErr = "! Поле автора не может быть пустым!"
-		case music.ErrEmptyFileType:
+		case errors.Is(m.errMsg, music.ErrEmptyFileType):
 			fileTypeErr = "! Тип файла не может быть пустым!"
-		case music.ErrEmptyFilePath:
+		case errors.Is(m.errMsg, music.ErrEmptyFilePath):
 			filePathErr = "! Путь к файлу не может быть пустым!"
-		case music.ErrUnsupportedFormat:
+		case errors.Is(m.errMsg, music.ErrUnsupportedFormat):
 			fileTypeErr = "! Неподдерживаемый тип файла!"
 			filePathErr = "! Возможно указан неправильный путь!"
+		case errors.Is(m.errMsg, storage.ErrNotUnique):
+			filePathErr = "! Этот файл уже храниться в каталоге!"
+		case errors.Is(m.errMsg, storage.ErrFileNotExists):
+			filePathErr = "! Файл не существует!"
+		case errors.Is(m.errMsg, storage.ErrNoFileAccess):
+			filePathErr = "! Не удаётся открыть файл!"
+		case errors.Is(m.errMsg, storage.ErrIsDirectory):
+			filePathErr = "! Не является файлом!"
+		default:
+			defaultErr = m.errMsg.Error()
 		}
 	}
 
@@ -89,13 +102,15 @@ func (m *model) renderInputForm() string {
 		writeInputField(&sb, fieldHeaders[i], errs[i], &input)
 	}
 
+	sb.WriteString("\n" + errorStyle.Render(defaultErr))
+
 	return sb.String()
 }
 
-func writeInputField(sb *strings.Builder, header, err string, input *ti.Model) {
+func writeInputField(sb *strings.Builder, header, errMsg string, input *ti.Model) {
 	sb.WriteString("\n")
 	sb.WriteString(inputHeaderStyle.Render(header))
-	sb.WriteString(errorStyle.Render(err))
+	sb.WriteString(errorStyle.Render(errMsg))
 	sb.WriteString("\n")
 	sb.WriteString(inputStyle.Render(input.View()))
 }

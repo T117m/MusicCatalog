@@ -5,8 +5,12 @@ import (
 )
 
 type keymap struct {
-	next, prev        key.Binding
-	quit              key.Binding
+	next, prev key.Binding
+	quit       key.Binding
+	action     key.Binding
+}
+
+type subKeymap struct {
 	add, edit, delete key.Binding
 }
 
@@ -24,6 +28,13 @@ var (
 			key.WithKeys("esc", "q"),
 			key.WithHelp("Esc/q", "Закрыть программу"),
 		),
+		action: key.NewBinding(
+			key.WithKeys("enter"),
+			key.WithHelp("Enter", "Включить/Остановить трек"),
+		),
+	}
+
+	trackListSubKeyMap = subKeymap{
 		add: key.NewBinding(
 			key.WithKeys("ctrl+a"),
 			key.WithHelp("C-a", "Добавить трек"),
@@ -40,51 +51,39 @@ var (
 
 	addTrackKeyMap = keymap{
 		next: key.NewBinding(
-			key.WithKeys("tab", "ctrl+n"),
+			key.WithKeys("tab", "ctrl+n", "enter"),
 			key.WithHelp("Tab/Ctrl+n", "Следующее поле"),
 		),
 		prev: key.NewBinding(
-			key.WithKeys("shift+tab", "ctrl+p"),
+			key.WithKeys("shift+tab", "ctrl+p", "shift+enter"),
 			key.WithHelp("S-Tab/C-n", "Предыдущее поле"),
 		),
 		quit: key.NewBinding(
 			key.WithKeys("esc"),
 			key.WithHelp("Esc", "Отмена"),
 		),
-		add: key.NewBinding(
-			key.WithKeys("ctrl-s"),
+		action: key.NewBinding(
+			key.WithKeys("ctrl+s"),
 			key.WithHelp("C-s", "Сохранить"),
-		),
-		edit: key.NewBinding(
-			key.WithDisabled(),
-		),
-		delete: key.NewBinding(
-			key.WithDisabled(),
 		),
 	}
 
 	editTrackKeyMap = keymap{
 		next: key.NewBinding(
-			key.WithKeys("tab", "ctrl+n"),
+			key.WithKeys("tab", "ctrl+n", "enter"),
 			key.WithHelp("Tab/Ctrl+n", "Следующее поле"),
 		),
 		prev: key.NewBinding(
-			key.WithKeys("shift+tab", "ctrl+p"),
+			key.WithKeys("shift+tab", "ctrl+p", "shift+enter"),
 			key.WithHelp("S-Tab/C-n", "Предыдущее поле"),
 		),
 		quit: key.NewBinding(
 			key.WithKeys("esc"),
 			key.WithHelp("Esc", "Отмена"),
 		),
-		add: key.NewBinding(
-			key.WithDisabled(),
-		),
-		edit: key.NewBinding(
-			key.WithKeys("ctrl-s"),
+		action: key.NewBinding(
+			key.WithKeys("ctrl+s"),
 			key.WithHelp("C-s", "Сохранить изменения"),
-		),
-		delete: key.NewBinding(
-			key.WithDisabled(),
 		),
 	}
 
@@ -99,13 +98,7 @@ var (
 			key.WithKeys("n", "esc", "q"),
 			key.WithHelp("n/Esc/q", "Отмена"),
 		),
-		add: key.NewBinding(
-			key.WithDisabled(),
-		),
-		edit: key.NewBinding(
-			key.WithDisabled(),
-		),
-		delete: key.NewBinding(
+		action: key.NewBinding(
 			key.WithKeys("y"),
 			key.WithHelp("y", "Удалить трек"),
 		),

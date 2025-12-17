@@ -9,8 +9,8 @@ import (
 	"github.com/T117m/MusicCatalog/player"
 	"github.com/T117m/MusicCatalog/storage"
 
-	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/table"
 	ti "github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	gloss "github.com/charmbracelet/lipgloss"
@@ -65,7 +65,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		
+
 		if pressed := msg.String(); pressed == "ctrl+c" {
 			return m, tea.Quit
 		}
@@ -79,24 +79,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.tracks.MoveUp(1)
 			case key.Matches(msg, trackListKeyMap.quit):
 				return m, tea.Quit
-			case key.Matches(msg, trackListKeyMap.add):
-				m.tracks.Blur()
-				m.view = AddTrackView
-				cmd := m.inputs[m.focused].Focus()
-				cmds = append(cmds, cmd)
-			case key.Matches(msg, trackListKeyMap.edit):
-				m.tracks.Blur()
-				m.view = EditTrackView
-				cmd := m.inputs[m.focused].Focus()
-				cmds = append(cmds, cmd)
-			case key.Matches(msg, trackListKeyMap.delete):
-				m.tracks.Blur()
-				m.view = DeleteTrackView
-			case msg.String() == "enter":
+			case key.Matches(msg, trackListKeyMap.action):
 				if len(m.tracks.Rows()) > 0 {
-					id, _ := strconv.Atoi(m.tracks.SelectedRow()[0])
+					id, err := strconv.Atoi(m.tracks.SelectedRow()[0])
+					if err != nil {
+						m.errMsg = err
+					}
 
-					track, _ := m.storage.GetTrackByID(id)
+					track, err := m.storage.GetTrackByID(id)
+					if err != nil {
+						m.errMsg = err
+					}
 
 					switch m.player.GetState() {
 					case player.Playing:
@@ -105,21 +98,43 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						} else {
 							m.player.Stop()
 							m.player.Wait()
-							m.player.Play(&track)
+							err = m.player.Play(&track)
+							if err != nil {
+								m.errMsg = err
+							}
 						}
 					case player.Paused:
 						if m.player.GetCurrentTrack().ID == id {
-							m.player.Play(&track)
+							err = m.player.Play(&track)
+							if err != nil {
+								m.errMsg = err
+							}
 						} else {
 							m.player.Stop()
 							m.player.Wait()
-							m.player.Play(&track)
+							err = m.player.Play(&track)
+							if err != nil {
+								m.errMsg = err
+							}
 						}
 					default:
 						//m.player.Wait()
 						m.player.Play(&track)
 					}
 				}
+			case key.Matches(msg, trackListSubKeyMap.add):
+				m.tracks.Blur()
+				m.view = AddTrackView
+				cmd := m.inputs[m.focused].Focus()
+				cmds = append(cmds, cmd)
+			case key.Matches(msg, trackListSubKeyMap.edit):
+				m.tracks.Blur()
+				m.view = EditTrackView
+				cmd := m.inputs[m.focused].Focus()
+				cmds = append(cmds, cmd)
+			case key.Matches(msg, trackListSubKeyMap.delete):
+				m.tracks.Blur()
+				m.view = DeleteTrackView
 			}
 		case AddTrackView:
 			switch {
@@ -132,7 +147,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				cmds = append(cmds, cmd)
 			case key.Matches(msg, addTrackKeyMap.quit):
 				m.quitInput()
-			case key.Matches(msg, addTrackKeyMap.add):
+			case key.Matches(msg, addTrackKeyMap.action):
 				m.addTrack()
 			}
 		case EditTrackView:
@@ -146,7 +161,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				cmds = append(cmds, cmd)
 			case key.Matches(msg, editTrackKeyMap.quit):
 				m.quitInput()
-			case key.Matches(msg, editTrackKeyMap.edit):
+			case key.Matches(msg, editTrackKeyMap.action):
 				m.editTrack()
 			}
 		case DeleteTrackView:
@@ -154,9 +169,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case key.Matches(msg, deleteTrackKeyMap.quit):
 				m.view = TrackListView
 				m.tracks.Focus()
-			case key.Matches(msg, deleteTrackKeyMap.delete):
+			case key.Matches(msg, deleteTrackKeyMap.action):
 				if m.errMsg == nil {
-				m.removeTrack()
+					m.removeTrack()
 				}
 			}
 		}
@@ -194,13 +209,16 @@ func (m model) View() string {
 				gloss.Top,
 				baseStyle.Render(m.tracks.View()),
 				baseStyle.Width(30).Render(m.renderInputForm()),
-			))
-		sb.WriteString(gloss.PlaceHorizontal(
-			gloss.Width(baseStyle.Render(m.tracks.View()))+
-				gloss.Width(helpStyle.Render(inputHelp)),
-			gloss.Right,
-			helpStyle.Render(inputHelp),
-		))
+			),
+		)
+		sb.WriteString(
+			gloss.PlaceHorizontal(
+				gloss.Width(baseStyle.Render(m.tracks.View()))+
+					gloss.Width(helpStyle.Render(inputHelp)),
+				gloss.Right,
+				helpStyle.Render(inputHelp),
+			),
+		)
 	}
 
 	return sb.String()

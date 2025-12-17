@@ -4,11 +4,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/T117m/MusicCatalog/music"
 	"io/fs"
 	"os"
 	"slices"
 	"strings"
+
+	"github.com/T117m/MusicCatalog/music"
 )
 
 const (
@@ -34,6 +35,10 @@ func (s *Storage) AddTrack(track *music.Track) error {
 
 	err = s.db.QueryRow(insertTrackQuery, track.Title, track.Artist, track.Genre, track.FileType, track.FilePath).Scan(&track.ID)
 	if err != nil {
+		if isUniqueConstraintErr(err) {
+			return fmt.Errorf("%w: %s", ErrNotUnique, track.FilePath)
+		}
+
 		return fmt.Errorf("can't add track due to query error: %w", err)
 	}
 
@@ -44,12 +49,12 @@ func checkFilePath(fp string) error {
 	fileInfo, err := os.Stat(fp)
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
-			return fmt.Errorf("file %s does not exist: %w", fp, err)
+			return fmt.Errorf("%w: %s", ErrFileNotExists, fp)
 		}
-		return fmt.Errorf("can't access file: %w", err)
+		return fmt.Errorf("%w: %s", ErrNoFileAccess, fp)
 	}
 	if fileInfo.IsDir() {
-		return fmt.Errorf("%s is a directory: %w", fp, err)
+		return fmt.Errorf("%w: %s", ErrIsDirectory, fp)
 	}
 
 	return nil
