@@ -6,12 +6,12 @@ import (
 )
 
 type Track struct {
-	ID       int    `db:"id"`
-	Title    string `db:"title"`
-	Artist   string `db:"artist"`
-	Genre    string `db:"genre"`
-	FileType string `db:"file_type"`
-	FilePath string `db:"file_path"`
+	ID       int   
+	Title    string
+	Artist   string
+	Genre    string
+	FileType string
+	FilePath string
 }
 
 func New(title, artist, genre, fileType, filePath string) Track {
