@@ -1,13 +1,14 @@
 package ui
 
 import (
-	"strings"
 	"errors"
+	"strings"
 
 	"github.com/T117m/MusicCatalog/music"
 	"github.com/T117m/MusicCatalog/storage"
 
 	ti "github.com/charmbracelet/bubbles/textinput"
+	tea "github.com/charmbracelet/bubbletea"
 	gloss "github.com/charmbracelet/lipgloss"
 )
 
@@ -20,6 +21,18 @@ const (
 	ft
 	fp
 )
+
+type inputFormModel struct {
+	inputs  []ti.Model
+	focused int
+}
+
+func newInputModel() inputFormModel {
+	return inputFormModel{
+		inputs:  newInputs(),
+		focused: 0,
+	}
+}
 
 func newInputs() []ti.Model {
 	inputs := make([]ti.Model, 5)
@@ -46,6 +59,35 @@ func newInputs() []ti.Model {
 	inputs[fp].Prompt = ""
 
 	return inputs
+}
+
+func (ifm inputFormModel) Update(msg tea.Msg) (inputFormModel, tea.Cmd) {
+	var cmd tea.Cmd
+	ifm.inputs[ifm.focused], cmd = ifm.inputs[ifm.focused].Update(msg)
+	return ifm, cmd
+}
+
+func (ifm *inputFormModel) Focus() tea.Cmd {
+	return ifm.inputs[ifm.focused].Focus()
+}
+
+func (ifm *inputFormModel) Blur() {
+	ifm.inputs[ifm.focused].Blur()
+}
+
+func (m *model) writeInputForm(sb *strings.Builder) {
+	sb.WriteString(
+		gloss.JoinHorizontal(
+			gloss.Top,
+			baseStyle.Render(m.tracks.View()),
+			baseStyle.Width(30).Render(m.renderInputForm()),
+		))
+	sb.WriteString(gloss.PlaceHorizontal(
+		gloss.Width(baseStyle.Render(m.tracks.View()))+
+			gloss.Width(helpStyle.Render(inputHelp)),
+		gloss.Right,
+		helpStyle.Render(inputHelp),
+	))
 }
 
 func (m *model) renderInputForm() string {
@@ -100,7 +142,7 @@ func (m *model) renderInputForm() string {
 
 	sb.WriteString(gloss.PlaceHorizontal(30, gloss.Center, inputHeaderStyle.Render(formHeader)))
 
-	for i, input := range m.inputs {
+	for i, input := range m.input.inputs {
 		writeInputField(&sb, fieldHeaders[i], errs[i], &input)
 	}
 
@@ -117,48 +159,48 @@ func writeInputField(sb *strings.Builder, header, errMsg string, input *ti.Model
 	sb.WriteString(inputStyle.Render(input.View()))
 }
 
-func (m *model) nextInput() {
-	m.inputs[m.focused].Blur()
-	m.focused = (m.focused + 1) % len(m.inputs)
-	m.inputs[m.focused].Focus()
+func (ifm *inputFormModel) nextInput() {
+	ifm.Blur()
+	ifm.focused = (ifm.focused + 1) % len(ifm.inputs)
+	ifm.Focus()
 }
 
-func (m *model) prevInput() {
-	m.focused--
-	if m.focused < 0 {
-		m.focused = len(m.inputs) - 1
+func (ifm *inputFormModel) prevInput() {
+	ifm.focused--
+	if ifm.focused < 0 {
+		ifm.focused = len(ifm.inputs) - 1
 	}
 }
 
 func (m *model) quitInput() {
-	m.resetInputs()
-	m.inputs[m.focused].Blur()
+	m.input.resetInputs()
+	m.input.Blur()
 	m.errMsg = nil
 	m.view = TrackListView
 	m.tracks.Focus()
 }
 
-func (m *model) setFocus(f field) {
+func (ifm *inputFormModel) setFocus(f field) {
 	index := int(f)
 
-	if index < 0 || index >= len(m.inputs) {
+	if index < 0 || index >= len(ifm.inputs) {
 		return
 	}
 
-	m.inputs[m.focused].Blur()
-	m.focused = index
-	m.inputs[m.focused].Focus()
+	ifm.Blur()
+	ifm.focused = index
+	ifm.Focus()
 }
 
-func (m *model) getInputs() (string, string, string, string, string) {
-	return m.inputs[title].Value(), m.inputs[artist].Value(), m.inputs[genre].Value(),
-		m.inputs[ft].Value(), m.inputs[fp].Value()
+func (ifm *inputFormModel) getInputs() (string, string, string, string, string) {
+	return ifm.inputs[title].Value(), ifm.inputs[artist].Value(), ifm.inputs[genre].Value(),
+		ifm.inputs[ft].Value(), ifm.inputs[fp].Value()
 }
 
-func (m *model) resetInputs() {
-	for i := range m.inputs {
-		m.inputs[i].Reset()
+func (ifm *inputFormModel) resetInputs() {
+	for i := range ifm.inputs {
+		ifm.inputs[i].Reset()
 	}
 
-	m.setFocus(0)
+	ifm.setFocus(0)
 }

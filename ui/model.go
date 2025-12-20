@@ -11,9 +11,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/table"
-	ti "github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	gloss "github.com/charmbracelet/lipgloss"
 )
 
 type model struct {
@@ -21,8 +19,7 @@ type model struct {
 	player  *player.Player
 	tracks  table.Model
 	view    ViewMode
-	inputs  []ti.Model
-	focused int
+	input   inputFormModel
 	search  searchModel
 	errMsg  error
 }
@@ -38,17 +35,18 @@ const (
 )
 
 func New(store *storage.Storage, player *player.Player) model {
-	tracks := newTrackList(store)
-	inputs := newInputs()
-	search := newSearchModel(store)
+	var (
+		tracks = newTrackList(store)
+		input  = newInputModel()
+		search = newSearchModel(store)
+	)
 
 	return model{
 		storage: store,
 		player:  player,
 		tracks:  tracks,
 		view:    TrackListView,
-		inputs:  inputs,
-		focused: 0,
+		input:   input,
 		search:  search,
 	}
 }
@@ -60,12 +58,12 @@ func (m model) Init() tea.Cmd {
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
-		cmds = make([]tea.Cmd, len(m.inputs))
+		cmds = make([]tea.Cmd, len(m.input.inputs))
 	)
 
 	m.tracks, cmd = m.tracks.Update(msg)
 	cmds = append(cmds, cmd)
-	m.inputs[m.focused], cmd = m.inputs[m.focused].Update(msg)
+	m.input, cmd = m.input.Update(msg)
 	cmds = append(cmds, cmd)
 	m.search.input, cmd = m.search.input.Update(msg)
 	cmds = append(cmds, cmd)
@@ -132,12 +130,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case key.Matches(msg, trackListSubKeyMap.add):
 				m.tracks.Blur()
 				m.view = AddTrackView
-				cmd := m.inputs[m.focused].Focus()
+				cmd := m.input.Focus()
 				cmds = append(cmds, cmd)
 			case key.Matches(msg, trackListSubKeyMap.edit):
 				m.tracks.Blur()
 				m.view = EditTrackView
-				cmd := m.inputs[m.focused].Focus()
+				cmd := m.input.Focus()
 				cmds = append(cmds, cmd)
 			case key.Matches(msg, trackListSubKeyMap.delete):
 				m.tracks.Blur()
@@ -150,11 +148,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case AddTrackView:
 			switch {
 			case key.Matches(msg, addTrackKeyMap.next):
-				m.nextInput()
+				m.input.nextInput()
 			case key.Matches(msg, addTrackKeyMap.prev):
-				m.inputs[m.focused].Blur()
-				m.prevInput()
-				cmd = m.inputs[m.focused].Focus()
+				m.input.Blur()
+				m.input.prevInput()
+				cmd = m.input.Focus()
 				cmds = append(cmds, cmd)
 			case key.Matches(msg, addTrackKeyMap.quit):
 				m.quitInput()
@@ -164,11 +162,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case EditTrackView:
 			switch {
 			case key.Matches(msg, editTrackKeyMap.next):
-				m.nextInput()
+				m.input.nextInput()
 			case key.Matches(msg, editTrackKeyMap.prev):
-				m.inputs[m.focused].Blur()
-				m.prevInput()
-				cmd = m.inputs[m.focused].Focus()
+				m.input.Blur()
+				m.input.prevInput()
+				cmd = m.input.Focus()
 				cmds = append(cmds, cmd)
 			case key.Matches(msg, editTrackKeyMap.quit):
 				m.quitInput()
@@ -217,37 +215,12 @@ func (m model) View() string {
 		sb.WriteString(baseStyle.Render(m.tracks.View()))
 		sb.WriteString(helpStyle.Render(trackListHelp))
 	case AddTrackView:
-		sb.WriteString(
-			gloss.JoinHorizontal(
-				gloss.Top,
-				baseStyle.Render(m.tracks.View()),
-				baseStyle.Width(30).Render(m.renderInputForm()),
-			))
-		sb.WriteString(gloss.PlaceHorizontal(
-			gloss.Width(baseStyle.Render(m.tracks.View()))+
-				gloss.Width(helpStyle.Render(inputHelp)),
-			gloss.Right,
-			helpStyle.Render(inputHelp),
-		))
+		m.writeInputForm(&sb)
 	case DeleteTrackView:
 		sb.WriteString(m.renderDeletePrompt())
 		sb.WriteString(helpStyle.Render(deleteHelp))
 	case EditTrackView:
-		sb.WriteString(
-			gloss.JoinHorizontal(
-				gloss.Top,
-				baseStyle.Render(m.tracks.View()),
-				baseStyle.Width(30).Render(m.renderInputForm()),
-			),
-		)
-		sb.WriteString(
-			gloss.PlaceHorizontal(
-				gloss.Width(baseStyle.Render(m.tracks.View()))+
-					gloss.Width(helpStyle.Render(inputHelp)),
-				gloss.Right,
-				helpStyle.Render(inputHelp),
-			),
-		)
+		m.writeInputForm(&sb)
 	case SearchView:
 		return m.search.View()
 	}
@@ -256,18 +229,18 @@ func (m model) View() string {
 }
 
 func (m *model) addTrack() {
-	newTrack := music.New(m.getInputs())
+	newTrack := music.New(m.input.getInputs())
 
 	newTrack.Normalize()
 
 	if err := newTrack.Validate(); err != nil {
 		if err == music.ErrEmptyFilePath || err == music.ErrUnsupportedFormat {
 			m.errMsg = err
-			m.setFocus(fp)
+			m.input.setFocus(fp)
 		}
 	} else if err := m.storage.AddTrack(&newTrack); err != nil {
 		m.errMsg = err
-		m.setFocus(fp)
+		m.input.setFocus(fp)
 	} else {
 		m.errMsg = nil
 		m.tracks = newTrackList(m.storage)
@@ -292,13 +265,13 @@ func (m *model) removeTrack() {
 
 func (m *model) editTrack() {
 	id, _ := strconv.Atoi(m.tracks.SelectedRow()[0])
-	newTitle, newArtist, newGenre, newFT, newFP := m.getInputs()
+	newTitle, newArtist, newGenre, newFT, newFP := m.input.getInputs()
 
 	if err := m.storage.EditTrackByID(id, newTitle, newArtist, newGenre, newFT, newFP); err != nil {
 		m.errMsg = err
 
 		if err == music.ErrEmptyFilePath || err == music.ErrUnsupportedFormat {
-			m.setFocus(fp)
+			m.input.setFocus(fp)
 		} else {
 			log.Fatal(err)
 		}
