@@ -8,16 +8,16 @@ import (
 	"github.com/charmbracelet/bubbles/table"
 )
 
+var columns = []table.Column{
+	{Title: "ID", Width: 4},
+	{Title: "Название", Width: 12},
+	{Title: "Исполнитель", Width: 12},
+	{Title: "Тип файла", Width: 10},
+	{Title: "Жанр", Width: 10},
+}
+
 func newTrackList(store *storage.Storage) table.Model {
 	tracks, _ := store.GetAllTracks()
-
-	columns := []table.Column{
-		{Title: "ID", Width: 4},
-		{Title: "Название", Width: 12},
-		{Title: "Исполнитель", Width: 12},
-		{Title: "Тип файла", Width: 10},
-		{Title: "Жанр", Width: 10},
-	}
 
 	var rows []table.Row
 	for _, track := range tracks {

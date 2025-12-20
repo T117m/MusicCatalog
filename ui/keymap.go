@@ -11,7 +11,7 @@ type keymap struct {
 }
 
 type subKeymap struct {
-	add, edit, delete key.Binding
+	add, edit, delete, search key.Binding
 }
 
 var (
@@ -46,6 +46,10 @@ var (
 		delete: key.NewBinding(
 			key.WithKeys("x"),
 			key.WithHelp("x", "Удалить трек"),
+		),
+		search: key.NewBinding(
+			key.WithKeys("ctrl+f"),
+			key.WithHelp("C-f", "Поиск"),
 		),
 	}
 
@@ -103,4 +107,32 @@ var (
 			key.WithHelp("y", "Удалить трек"),
 		),
 	}
+
+	searchTrackKeyMap = keymap{
+		next: key.NewBinding(
+			key.WithKeys("tab"),
+		),
+		prev: key.NewBinding(
+			key.WithKeys("shift+tab"),
+		),
+		quit: key.NewBinding(
+			key.WithKeys("esc"),
+			key.WithHelp("Esc", "Выйти"),
+		),
+		action: key.NewBinding(
+			key.WithKeys("enter"),
+			key.WithHelp("Enter", "Поиск"),
+		),
+	}
 )
+
+func (k keymap) ShortHelp() []key.Binding {
+	return []key.Binding{k.action, k.quit}
+}
+
+func (k keymap) FullHelp() [][]key.Binding {
+	return [][]key.Binding{
+		{k.next, k.prev, k.action},
+		{k.quit},
+	}
+}

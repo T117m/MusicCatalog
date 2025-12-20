@@ -27,6 +27,9 @@ var (
 			BorderStyle(gloss.NormalBorder()).
 			BorderBottom(true).
 			BorderForeground(gloss.Color("7"))
+	searchFieldStyle = gloss.NewStyle().
+			BorderStyle(gloss.DoubleBorder()).
+			BorderForeground(gloss.Color("7"))
 )
 
 const (

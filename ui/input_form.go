@@ -11,8 +11,10 @@ import (
 	gloss "github.com/charmbracelet/lipgloss"
 )
 
+type field int
+
 const (
-	title = iota
+	title field = iota
 	artist
 	genre
 	ft
@@ -136,7 +138,9 @@ func (m *model) quitInput() {
 	m.tracks.Focus()
 }
 
-func (m *model) setFocus(index int) {
+func (m *model) setFocus(f field) {
+	index := int(f)
+
 	if index < 0 || index >= len(m.inputs) {
 		return
 	}

@@ -23,6 +23,7 @@ type model struct {
 	view    ViewMode
 	inputs  []ti.Model
 	focused int
+	search  searchModel
 	errMsg  error
 }
 
@@ -33,11 +34,13 @@ const (
 	AddTrackView
 	DeleteTrackView
 	EditTrackView
+	SearchView
 )
 
 func New(store *storage.Storage, player *player.Player) model {
 	tracks := newTrackList(store)
 	inputs := newInputs()
+	search := newSearchModel(store)
 
 	return model{
 		storage: store,
@@ -46,6 +49,7 @@ func New(store *storage.Storage, player *player.Player) model {
 		view:    TrackListView,
 		inputs:  inputs,
 		focused: 0,
+		search:  search,
 	}
 }
 
@@ -58,9 +62,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmd  tea.Cmd
 		cmds = make([]tea.Cmd, len(m.inputs))
 	)
+
 	m.tracks, cmd = m.tracks.Update(msg)
 	cmds = append(cmds, cmd)
 	m.inputs[m.focused], cmd = m.inputs[m.focused].Update(msg)
+	cmds = append(cmds, cmd)
+	m.search.input, cmd = m.search.input.Update(msg)
 	cmds = append(cmds, cmd)
 
 	switch msg := msg.(type) {
@@ -135,6 +142,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case key.Matches(msg, trackListSubKeyMap.delete):
 				m.tracks.Blur()
 				m.view = DeleteTrackView
+			case key.Matches(msg, trackListSubKeyMap.search):
+				m.tracks.Blur()
+				m.view = SearchView
+				m.search.input.Focus()
 			}
 		case AddTrackView:
 			switch {
@@ -173,6 +184,24 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if m.errMsg == nil {
 					m.removeTrack()
 				}
+			}
+		case SearchView:
+			switch {
+			case key.Matches(msg, searchTrackKeyMap.next):
+				m.search.tag++
+				if m.search.tag > 3 {
+					m.search.tag = 0
+				}
+			case key.Matches(msg, searchTrackKeyMap.prev):
+				m.search.tag--
+				if m.search.tag < 0 {
+					m.search.tag = 3
+				}
+			case key.Matches(msg, searchTrackKeyMap.quit):
+				m.search.input.Blur()
+				m.view = TrackListView
+				m.tracks.Focus()
+			case key.Matches(msg, searchTrackKeyMap.action):
 			}
 		}
 	}
@@ -219,6 +248,8 @@ func (m model) View() string {
 				helpStyle.Render(inputHelp),
 			),
 		)
+	case SearchView:
+		return m.search.View()
 	}
 
 	return sb.String()
