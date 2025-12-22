@@ -32,21 +32,17 @@ var (
 			BorderForeground(gloss.Color("7"))
 )
 
-const (
-	trackListHelp = "\nq: Выйти | Ctrl+a: Добавить трек | x: Удалить трек\nCtrl+r: Редактировать трек | Enter: Включить/Выключить трек\n"
-	inputHelp     = "\nEsc: Вернуться | Enter: Ввод | Ctrl+s: Сохранить\n"
-	deleteHelp    = "\nEsc/q: Вернутся\n"
-)
-
 func newStyledTable(columns []table.Column, rows []table.Row) table.Model {
-	t := table.New(
-		table.WithColumns(columns),
-		table.WithRows(rows),
-		table.WithFocused(true),
-		table.WithHeight(len(rows)+1),
+	var (
+		t = table.New(
+			table.WithColumns(columns),
+			table.WithRows(rows),
+			table.WithFocused(true),
+			table.WithHeight(len(rows)+1),
+		)
+		s = table.DefaultStyles()
 	)
 
-	s := table.DefaultStyles()
 	s.Header = s.Header.
 		BorderStyle(gloss.NormalBorder()).
 		BorderForeground(gloss.Color("7")).

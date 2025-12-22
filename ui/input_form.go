@@ -75,7 +75,7 @@ func (ifm *inputFormModel) Blur() {
 	ifm.inputs[ifm.focused].Blur()
 }
 
-func (m *model) writeInputForm(sb *strings.Builder) {
+func (m *model) writeInputForm(sb *strings.Builder, k keymap) {
 	sb.WriteString(
 		gloss.JoinHorizontal(
 			gloss.Top,
@@ -84,9 +84,9 @@ func (m *model) writeInputForm(sb *strings.Builder) {
 		))
 	sb.WriteString(gloss.PlaceHorizontal(
 		gloss.Width(baseStyle.Render(m.tracks.View()))+
-			gloss.Width(helpStyle.Render(inputHelp)),
+			gloss.Width("\n" + m.help.View(k)),
 		gloss.Right,
-		helpStyle.Render(inputHelp),
+		helpStyle.Render("\n" + m.help.View(k)),
 	))
 }
 

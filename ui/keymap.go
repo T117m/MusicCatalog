@@ -18,15 +18,15 @@ var (
 	trackListKeyMap = keymap{
 		next: key.NewBinding(
 			key.WithKeys("tab", "ctrl+n"),
-			key.WithHelp("Tab/Ctrl+n", "Следующий трек"),
+			key.WithHelp("j/↓/Tab/Ctrl+n", "Следующий трек"),
 		),
 		prev: key.NewBinding(
 			key.WithKeys("shift+tab", "ctrl+p"),
-			key.WithHelp("S-Tab/C-n", "Предыдущий трек"),
+			key.WithHelp("k/↑/S-Tab/C-n", "Предыдущий трек"),
 		),
 		quit: key.NewBinding(
 			key.WithKeys("esc", "q"),
-			key.WithHelp("Esc/q", "Закрыть программу"),
+			key.WithHelp("Esc/q", "Выйти"),
 		),
 		action: key.NewBinding(
 			key.WithKeys("enter"),
@@ -56,11 +56,11 @@ var (
 	addTrackKeyMap = keymap{
 		next: key.NewBinding(
 			key.WithKeys("tab", "ctrl+n", "enter"),
-			key.WithHelp("Tab/Ctrl+n", "Следующее поле"),
+			key.WithHelp("Enter/Tab/Ctrl-n", "Следующее поле"),
 		),
 		prev: key.NewBinding(
-			key.WithKeys("shift+tab", "ctrl+p", "shift+enter"),
-			key.WithHelp("S-Tab/C-n", "Предыдущее поле"),
+			key.WithKeys("shift+tab", "ctrl+p"),
+			key.WithHelp("S-Tab/C-p", "Предыдущее поле"),
 		),
 		quit: key.NewBinding(
 			key.WithKeys("esc"),
@@ -75,11 +75,11 @@ var (
 	editTrackKeyMap = keymap{
 		next: key.NewBinding(
 			key.WithKeys("tab", "ctrl+n", "enter"),
-			key.WithHelp("Tab/Ctrl+n", "Следующее поле"),
+			key.WithHelp("Enter/Tab/Ctrl-n", "Следующее поле"),
 		),
 		prev: key.NewBinding(
-			key.WithKeys("shift+tab", "ctrl+p", "shift+enter"),
-			key.WithHelp("S-Tab/C-n", "Предыдущее поле"),
+			key.WithKeys("shift+tab", "ctrl+p"),
+			key.WithHelp("S-Tab/C-p", "Предыдущее поле"),
 		),
 		quit: key.NewBinding(
 			key.WithKeys("esc"),
@@ -124,15 +124,37 @@ var (
 			key.WithHelp("Enter", "Поиск"),
 		),
 	}
+
+	showHelp = key.NewBinding(
+		key.WithKeys("ctrl+h"),
+		key.WithHelp("C-h", "Помощь"),
+	)
+
+	ctrlc = key.NewBinding(
+		key.WithKeys("ctrl+c"),
+		key.WithHelp("C-c", "Закрыть программу"),
+	)
 )
 
 func (k keymap) ShortHelp() []key.Binding {
-	return []key.Binding{k.action, k.quit}
+	return []key.Binding{showHelp, k.quit, ctrlc}
 }
 
 func (k keymap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.next, k.prev, k.action},
-		{k.quit},
+		{k.next, k.prev},
+		{k.action},
+		{showHelp, k.quit, ctrlc},
+	}
+}
+
+func (sk subKeymap) ShortHelp() []key.Binding {
+	return []key.Binding{showHelp, ctrlc}
+}
+
+func (sk subKeymap) FullHelp() [][]key.Binding {
+	return [][]key.Binding{
+		{sk.add, sk.edit},
+		{sk.delete, sk.search},
 	}
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/T117m/MusicCatalog/player"
 	"github.com/T117m/MusicCatalog/storage"
 
+	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
@@ -22,6 +23,7 @@ type model struct {
 	input   inputFormModel
 	search  searchModel
 	errMsg  error
+	help    help.Model
 }
 
 type ViewMode int
@@ -48,6 +50,7 @@ func New(store *storage.Storage, player *player.Player) model {
 		view:    TrackListView,
 		input:   input,
 		search:  search,
+		help:    help.New(),
 	}
 }
 
@@ -65,14 +68,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmds = append(cmds, cmd)
 	m.input, cmd = m.input.Update(msg)
 	cmds = append(cmds, cmd)
-	m.search.input, cmd = m.search.input.Update(msg)
+	m.search, cmd = m.search.Update(msg)
 	cmds = append(cmds, cmd)
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 
-		if pressed := msg.String(); pressed == "ctrl+c" {
+		switch {
+		case key.Matches(msg, ctrlc):
 			return m, tea.Quit
+		case key.Matches(msg, showHelp):
+			m.help.ShowAll = !m.help.ShowAll
 		}
 
 		switch m.view {
@@ -213,16 +219,20 @@ func (m model) View() string {
 	switch m.view {
 	case TrackListView:
 		sb.WriteString(baseStyle.Render(m.tracks.View()))
-		sb.WriteString(helpStyle.Render(trackListHelp))
+		if m.help.ShowAll {
+			sb.WriteString("\n" + m.help.View(trackListSubKeyMap) + "\n")
+		}
+		sb.WriteString("\n" + m.help.View(trackListKeyMap))
 	case AddTrackView:
-		m.writeInputForm(&sb)
+		m.writeInputForm(&sb, addTrackKeyMap)
 	case DeleteTrackView:
 		sb.WriteString(m.renderDeletePrompt())
-		sb.WriteString(helpStyle.Render(deleteHelp))
+		sb.WriteString("\n" + m.help.View(deleteTrackKeyMap))
 	case EditTrackView:
-		m.writeInputForm(&sb)
+		m.writeInputForm(&sb, editTrackKeyMap)
 	case SearchView:
-		return m.search.View()
+		sb.WriteString(m.search.View())
+		sb.WriteString("\n" + m.help.View(searchTrackKeyMap))
 	}
 
 	return sb.String()
