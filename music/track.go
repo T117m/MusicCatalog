@@ -52,7 +52,7 @@ func (t Track) Validate() error {
 	return nil
 }
 
-func (t *Track) Normalize() {
+func (t *Track) SetDefaults() {
 	if strings.TrimSpace(t.Title) == "" {
 		t.Title = "Untitled"
 	}

@@ -247,7 +247,7 @@ func (m model) View() string {
 func (m *model) addTrack() {
 	newTrack := music.New(m.input.getInputs())
 
-	newTrack.Normalize()
+	newTrack.SetDefaults()
 
 	if err := newTrack.Validate(); err != nil {
 		if err == music.ErrEmptyFilePath || err == music.ErrUnsupportedFormat {

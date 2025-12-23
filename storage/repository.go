@@ -28,7 +28,7 @@ func (s *Storage) AddTrack(track *music.Track) error {
 		return fmt.Errorf("problem with path: %w", err)
 	}
 
-	track.Normalize()
+	track.SetDefaults()
 
 	if err := track.Validate(); err != nil {
 		return fmt.Errorf("can't add track: validation fail: %w", err)
