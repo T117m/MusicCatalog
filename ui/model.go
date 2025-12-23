@@ -92,48 +92,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case key.Matches(msg, trackListKeyMap.quit):
 				return m, tea.Quit
 			case key.Matches(msg, trackListKeyMap.action):
-				if len(m.tracks.Rows()) > 0 {
-					id, err := strconv.Atoi(m.tracks.SelectedRow()[0])
-					if err != nil {
-						m.errMsg = err
-					}
-
-					track, err := m.storage.GetTrackByID(id)
-					if err != nil {
-						m.errMsg = err
-					}
-
-					switch m.player.GetState() {
-					case player.Playing:
-						if m.player.GetCurrentTrack().ID == id {
-							m.player.Pause()
-						} else {
-							m.player.Stop()
-							m.player.Wait()
-							err = m.player.Play(&track)
-							if err != nil {
-								m.errMsg = err
-							}
-						}
-					case player.Paused:
-						if m.player.GetCurrentTrack().ID == id {
-							err = m.player.Play(&track)
-							if err != nil {
-								m.errMsg = err
-							}
-						} else {
-							m.player.Stop()
-							m.player.Wait()
-							err = m.player.Play(&track)
-							if err != nil {
-								m.errMsg = err
-							}
-						}
-					default:
-						//m.player.Wait()
-						m.player.Play(&track)
-					}
-				}
+				m.playTrack()
 			case key.Matches(msg, trackListSubKeyMap.add):
 				m.tracks.Blur()
 				m.view = AddTrackView
@@ -242,6 +201,53 @@ func (m model) View() string {
 	}
 
 	return sb.String()
+}
+
+func (m *model) playTrack() {
+	if len(m.tracks.Rows()) > 0 {
+		id, err := strconv.Atoi(m.tracks.SelectedRow()[0])
+		if err != nil {
+			log.Fatal(err)
+			m.errMsg = err
+		}
+
+		track, err := m.storage.GetTrackByID(id)
+		if err != nil {
+			log.Fatal(err)
+			m.errMsg = err
+		}
+
+		switch m.player.GetState() {
+		case player.Playing:
+			if m.player.GetCurrentTrack().ID == id {
+				m.player.Pause()
+			} else {
+				m.player.Stop()
+				err = m.player.Play(&track)
+				if err != nil {
+					log.Fatal(err)
+					m.errMsg = err
+				}
+			}
+		case player.Paused:
+			if m.player.GetCurrentTrack().ID == id {
+				err = m.player.Play(&track)
+				if err != nil {
+					log.Fatal(err)
+					m.errMsg = err
+				}
+			} else {
+				m.player.Stop()
+				err = m.player.Play(&track)
+				if err != nil {
+					log.Fatal(err)
+					m.errMsg = err
+				}
+			}
+		default:
+			m.player.Play(&track)
+		}
+	}
 }
 
 func (m *model) addTrack() {
