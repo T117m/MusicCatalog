@@ -13,8 +13,8 @@ var columns = []table.Column{
 	{Title: "ID", Width: 4},
 	{Title: "Название", Width: 12},
 	{Title: "Исполнитель", Width: 12},
-	{Title: "Тип файла", Width: 10},
 	{Title: "Жанр", Width: 10},
+	{Title: "Тип файла", Width: 10},
 }
 
 func defaultTrackList(store *storage.Storage) table.Model {
@@ -29,8 +29,8 @@ func newTrackList(tracks []music.Track) table.Model {
 			strconv.Itoa(track.ID),
 			track.Title,
 			track.Artist,
-			track.FileType,
 			track.Genre,
+			track.FileType,
 		}
 
 		rows = append(rows, row)

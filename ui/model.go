@@ -141,6 +141,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case key.Matches(msg, trackListSubKeyMap.edit):
 				m.tracks.Blur()
 				m.view = EditTrackView
+				m.editInputs()
 				cmd := m.input.Focus()
 				cmds = append(cmds, cmd)
 			case key.Matches(msg, trackListSubKeyMap.delete):
@@ -240,6 +241,17 @@ func (m model) View() string {
 	}
 
 	return sb.String()
+}
+
+func (m *model) editInputs() {
+	for i := range 4 {
+		m.input.inputs[i].SetValue(m.tracks.SelectedRow()[i+1]) 
+	}
+
+	id, _ := strconv.Atoi(m.tracks.SelectedRow()[0])
+	track, _ := m.storage.GetTrackByID(id)
+
+	m.input.inputs[4].SetValue(track.FilePath)
 }
 
 func (m *model) addTrack() {

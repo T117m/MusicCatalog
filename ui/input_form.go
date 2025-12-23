@@ -79,7 +79,11 @@ func (m *model) writeInputForm(sb *strings.Builder, k keymap) {
 	sb.WriteString(
 		gloss.JoinHorizontal(
 			gloss.Top,
-			baseStyle.Render(m.tracks.View()),
+			gloss.JoinVertical(
+				gloss.Center,
+				m.search.View(unfocusedStyle),
+				unfocusedStyle.Render(m.tracks.View()),
+			),
 			baseStyle.Width(30).Render(m.renderInputForm()),
 		))
 	sb.WriteString(gloss.PlaceHorizontal(
