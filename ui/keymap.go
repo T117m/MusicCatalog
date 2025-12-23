@@ -56,7 +56,7 @@ var (
 	addTrackKeyMap = keymap{
 		next: key.NewBinding(
 			key.WithKeys("tab", "ctrl+n", "enter"),
-			key.WithHelp("Enter/Tab/Ctrl-n", "Следующее поле"),
+			key.WithHelp("Enter/Tab/C-n", "Следующее поле"),
 		),
 		prev: key.NewBinding(
 			key.WithKeys("shift+tab", "ctrl+p"),
@@ -75,7 +75,7 @@ var (
 	editTrackKeyMap = keymap{
 		next: key.NewBinding(
 			key.WithKeys("tab", "ctrl+n", "enter"),
-			key.WithHelp("Enter/Tab/Ctrl-n", "Следующее поле"),
+			key.WithHelp("Enter/Tab/C-n", "Следующее поле"),
 		),
 		prev: key.NewBinding(
 			key.WithKeys("shift+tab", "ctrl+p"),
