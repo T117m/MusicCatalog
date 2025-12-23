@@ -94,8 +94,8 @@ func (s *Storage) GetAllTracks() ([]music.Track, error) {
 	return s.scanTracks(rows)
 }
 
-func (s *Storage) getTracksByQyuery(q, field string) ([]music.Track, error) {
-	rows, err := s.db.Query(q, field)
+func (s *Storage) getTracksByQyuery(q, v string) ([]music.Track, error) {
+	rows, err := s.db.Query(q, v)
 	if err != nil {
 		return nil, fmt.Errorf("can't get tracks: %w", err)
 	}

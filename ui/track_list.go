@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/T117m/MusicCatalog/storage"
+	"github.com/T117m/MusicCatalog/music"
 
 	"github.com/charmbracelet/bubbles/table"
 )
@@ -16,9 +17,12 @@ var columns = []table.Column{
 	{Title: "Жанр", Width: 10},
 }
 
-func newTrackList(store *storage.Storage) table.Model {
+func defaultTrackList(store *storage.Storage) table.Model {
 	tracks, _ := store.GetAllTracks()
+	return newTrackList(tracks)
+}
 
+func newTrackList(tracks []music.Track) table.Model {
 	var rows []table.Row
 	for _, track := range tracks {
 		row := []string{

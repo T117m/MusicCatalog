@@ -38,7 +38,7 @@ const (
 
 func New(store *storage.Storage, player *player.Player) model {
 	var (
-		tracks = newTrackList(store)
+		tracks = defaultTrackList(store)
 		input  = newInputModel()
 		search = newSearchModel()
 	)
@@ -206,6 +206,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.view = TrackListView
 				m.tracks.Focus()
 			case key.Matches(msg, searchTrackKeyMap.action):
+				m.tracks.Blur()
+				m.searchTrack()
 			}
 		}
 	}
@@ -255,7 +257,7 @@ func (m *model) addTrack() {
 		m.input.setFocus(fp)
 	} else {
 		m.errMsg = nil
-		m.tracks = newTrackList(m.storage)
+		m.tracks = defaultTrackList(m.storage)
 
 		m.quitInput()
 	}
@@ -268,7 +270,7 @@ func (m *model) removeTrack() {
 		m.errMsg = err
 	} else {
 		m.errMsg = nil
-		m.tracks = newTrackList(m.storage)
+		m.tracks = defaultTrackList(m.storage)
 		m.view = TrackListView
 
 		m.tracks.Focus()
@@ -289,8 +291,39 @@ func (m *model) editTrack() {
 		}
 	} else {
 		m.errMsg = nil
-		m.tracks = newTrackList(m.storage)
+		m.tracks = defaultTrackList(m.storage)
 
 		m.quitInput()
+	}
+}
+
+func (m *model) searchTrack() {
+	if v := m.search.input.Value(); v == "" {
+		m.tracks = defaultTrackList(m.storage)
+	} else {
+		switch m.search.tag {
+		case title:
+			m.searchTrackByFunc(m.storage.GetTracksByTitle, v)
+		case artist:
+			m.searchTrackByFunc(m.storage.GetTracksByArtist, v)
+		case genre:
+			m.searchTrackByFunc(m.storage.GetTracksByGenre, v)
+		case ft:
+			m.searchTrackByFunc(m.storage.GetTracksByFileType, v)
+		}
+	}
+
+	m.tracks.Blur()
+}
+
+func (m *model) searchTrackByFunc(
+	searchFunc func(string) ([]music.Track, error),
+	v string,
+) {
+	var tracks []music.Track
+	tracks, m.errMsg = searchFunc(v)
+
+	if m.errMsg == nil {
+		m.tracks = newTrackList(tracks)
 	}
 }

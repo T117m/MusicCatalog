@@ -3,7 +3,6 @@ package ui
 import (
 	"strings"
 
-	"github.com/charmbracelet/bubbles/table"
 	ti "github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	gloss "github.com/charmbracelet/lipgloss"
@@ -12,13 +11,10 @@ import (
 type searchModel struct {
 	input   ti.Model
 	tag     field
-	results table.Model
 }
 
 func newSearchModel() searchModel {
-	var (
-		input = ti.New()
-	)
+	input := ti.New()
 
 	input.Width = 45
 	input.Prompt = ""
