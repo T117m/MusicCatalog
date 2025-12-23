@@ -40,7 +40,7 @@ func New(store *storage.Storage, player *player.Player) model {
 	var (
 		tracks = newTrackList(store)
 		input  = newInputModel()
-		search = newSearchModel(store)
+		search = newSearchModel()
 	)
 
 	return model{
@@ -218,7 +218,8 @@ func (m model) View() string {
 
 	switch m.view {
 	case TrackListView:
-		sb.WriteString(baseStyle.Render(m.tracks.View()))
+		sb.WriteString(m.search.View(unfocusedStyle))
+		sb.WriteString("\n" + baseStyle.Render(m.tracks.View()))
 		if m.help.ShowAll {
 			sb.WriteString("\n" + m.help.View(trackListSubKeyMap) + "\n")
 		}
@@ -231,7 +232,8 @@ func (m model) View() string {
 	case EditTrackView:
 		m.writeInputForm(&sb, editTrackKeyMap)
 	case SearchView:
-		sb.WriteString(m.search.View())
+		sb.WriteString(m.search.View(baseStyle))
+		sb.WriteString("\n" + unfocusedStyle.Render(m.tracks.View()))
 		sb.WriteString("\n" + m.help.View(searchTrackKeyMap))
 	}
 

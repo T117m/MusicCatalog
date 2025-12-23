@@ -111,9 +111,11 @@ var (
 	searchTrackKeyMap = keymap{
 		next: key.NewBinding(
 			key.WithKeys("tab"),
+			key.WithHelp("Tab", "Следующий тег"),
 		),
 		prev: key.NewBinding(
 			key.WithKeys("shift+tab"),
+			key.WithHelp("S-Tab", "Предыдущий тег"),
 		),
 		quit: key.NewBinding(
 			key.WithKeys("esc"),

@@ -3,8 +3,6 @@ package ui
 import (
 	"strings"
 
-	"github.com/T117m/MusicCatalog/storage"
-
 	"github.com/charmbracelet/bubbles/table"
 	ti "github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -17,19 +15,17 @@ type searchModel struct {
 	results table.Model
 }
 
-func newSearchModel(store *storage.Storage) searchModel {
+func newSearchModel() searchModel {
 	var (
-		input   = ti.New()
-		results = newTrackList(store)
+		input = ti.New()
 	)
 
 	input.Width = 45
 	input.Prompt = ""
 
 	return searchModel{
-		input:   input,
-		tag:     title,
-		results: results,
+		input: input,
+		tag:   title,
 	}
 }
 
@@ -39,10 +35,11 @@ func (s searchModel) Update(msg tea.Msg) (searchModel, tea.Cmd) {
 	return s, cmd
 }
 
-func (s *searchModel) View() string {
+var titles = [4]string{"Название", "Автор", "Жанр", "Тип файла"}
+
+func (s *searchModel) View(st gloss.Style) string {
 	var (
-		sb     strings.Builder
-		titles = [4]string{"Название", "Автор", "Жанр", "Тип файла"}
+		sb strings.Builder
 	)
 
 	if s.tag > 3 || s.tag < 0 {
@@ -52,13 +49,12 @@ func (s *searchModel) View() string {
 	sb.WriteString(
 		gloss.JoinHorizontal(
 			gloss.Top,
-			baseStyle.Width(46).Render(s.input.View()),
-			searchFieldStyle.Width(10).AlignHorizontal(
+			st.Width(46).Render(s.input.View()),
+			st.Width(10).AlignHorizontal(
 				gloss.Center,
 			).Render(titles[s.tag]),
 		),
 	)
-	sb.WriteString("\n" + baseStyle.Render(s.results.View()))
 
 	return sb.String()
 }

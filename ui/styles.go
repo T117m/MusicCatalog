@@ -10,6 +10,10 @@ var (
 			BorderStyle(gloss.ThickBorder()).
 			BorderForeground(gloss.Color("7")).
 			Foreground(gloss.Color("7"))
+	unfocusedStyle = gloss.NewStyle().
+			BorderStyle(gloss.DoubleBorder()).
+			BorderForeground(gloss.Color("7")).
+			Foreground(gloss.Color("7"))
 	deleteStyle = gloss.NewStyle().
 			Foreground(gloss.Color("#FF746C")).
 			BorderStyle(gloss.ThickBorder()).
@@ -26,9 +30,6 @@ var (
 	inputStyle = gloss.NewStyle().
 			BorderStyle(gloss.NormalBorder()).
 			BorderBottom(true).
-			BorderForeground(gloss.Color("7"))
-	searchFieldStyle = gloss.NewStyle().
-			BorderStyle(gloss.DoubleBorder()).
 			BorderForeground(gloss.Color("7"))
 )
 
