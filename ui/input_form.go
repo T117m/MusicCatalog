@@ -132,7 +132,7 @@ func (m *model) renderInputForm() string {
 		case errors.Is(m.errMsg, storage.ErrNotUnique):
 			filePathErr = "! Этот файл уже храниться в каталоге!"
 		case errors.Is(m.errMsg, storage.ErrFileNotExists):
-			filePathErr = "! Файл не существует!"
+			filePathErr = "! Файл отсутствует!"
 		case errors.Is(m.errMsg, storage.ErrNoFileAccess):
 			filePathErr = "! Не удаётся открыть файл!"
 		case errors.Is(m.errMsg, storage.ErrIsDirectory):

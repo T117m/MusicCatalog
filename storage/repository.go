@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"slices"
-	"strings"
 
 	"github.com/T117m/MusicCatalog/music"
 )
@@ -159,27 +157,16 @@ func (s *Storage) EditTrackByID(id int, title, artist, genre, ft, fp string) err
 		return err
 	}
 
-	if strings.TrimSpace(title) != "" {
-		track.Title = title
-	}
-	if strings.TrimSpace(artist) != "" {
-		track.Artist = artist
-	}
-	if strings.TrimSpace(genre) != "" {
-		track.Genre = genre
-	}
-	if strings.TrimSpace(ft) != "" && slices.Contains(music.SupportedFormats, ft) {
-		track.FileType = ft
-	}
-	if strings.TrimSpace(fp) != "" {
-		if err := checkFilePath(fp); err != nil {
-			return err
-		}
-
-		track.FilePath = fp
+	if err := checkFilePath(fp); err != nil {
+		return err
 	}
 
-	track.Normalize()
+	track.Title = title
+	track.Artist = artist
+	track.Genre = genre
+	track.FileType = ft
+	track.FilePath = fp
+
 	if err := track.Validate(); err != nil {
 		return fmt.Errorf("validation failed after edit: %w", err)
 	}

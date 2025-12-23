@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"errors"
 	"log"
 	"strconv"
 	"strings"
@@ -243,17 +244,6 @@ func (m model) View() string {
 	return sb.String()
 }
 
-func (m *model) editInputs() {
-	for i := range 4 {
-		m.input.inputs[i].SetValue(m.tracks.SelectedRow()[i+1]) 
-	}
-
-	id, _ := strconv.Atoi(m.tracks.SelectedRow()[0])
-	track, _ := m.storage.GetTrackByID(id)
-
-	m.input.inputs[4].SetValue(track.FilePath)
-}
-
 func (m *model) addTrack() {
 	newTrack := music.New(m.input.getInputs())
 
@@ -289,17 +279,39 @@ func (m *model) removeTrack() {
 	}
 }
 
+func (m *model) editInputs() {
+	for i := range 4 {
+		v := m.tracks.SelectedRow()[i+1]
+		m.input.inputs[i].SetValue(v)
+		m.input.inputs[i].Placeholder = v
+	}
+
+	id, _ := strconv.Atoi(m.tracks.SelectedRow()[0])
+	track, _ := m.storage.GetTrackByID(id)
+
+	m.input.inputs[fp].SetValue(track.FilePath)
+	m.input.inputs[fp].Placeholder = track.FilePath
+}
+
 func (m *model) editTrack() {
 	id, _ := strconv.Atoi(m.tracks.SelectedRow()[0])
 	newTitle, newArtist, newGenre, newFT, newFP := m.input.getInputs()
+	log.Printf("%d, %s, %s, %s, %s, %s", id, newTitle, newArtist, newGenre, newFT, newFP)
 
 	if err := m.storage.EditTrackByID(id, newTitle, newArtist, newGenre, newFT, newFP); err != nil {
 		m.errMsg = err
 
-		if err == music.ErrEmptyFilePath || err == music.ErrUnsupportedFormat {
+		switch {
+		case compareErrs(err, music.ErrEmptyTitle):
+			m.input.setFocus(title)
+		case compareErrs(err, music.ErrEmptyArtist):
+			m.input.setFocus(artist)
+		case compareErrs(err, music.ErrEmptyGenre):
+			m.input.setFocus(genre)
+		case compareErrs(err, music.ErrEmptyFileType, music.ErrUnsupportedFormat):
+			m.input.setFocus(ft)
+		case compareErrs(err, music.ErrEmptyFilePath, music.ErrUnsupportedFormat, storage.ErrFileNotExists, storage.ErrIsDirectory, storage.ErrNotUnique, storage.ErrNoFileAccess):
 			m.input.setFocus(fp)
-		} else {
-			log.Fatal(err)
 		}
 	} else {
 		m.errMsg = nil
@@ -307,6 +319,15 @@ func (m *model) editTrack() {
 
 		m.quitInput()
 	}
+}
+
+func compareErrs(target error, errs ...error) bool {
+	for _, err := range errs {
+		if errors.Is(target, err) {
+			return true
+		}
+	}
+	return false
 }
 
 func (m *model) searchTrack() {
