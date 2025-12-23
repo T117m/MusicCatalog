@@ -13,12 +13,15 @@ import (
 )
 
 const (
-	insertTrackQuery       = "INSERT INTO tracks(title, artist, genre, file_type, file_path) VALUES (?, ?, ?, ?, ?) RETURNING id;"
-	selectAllQuery         = "SELECT id, title, artist, genre, file_type, file_path FROM tracks;"
-	selectAllByArtistQuery = "SELECT id, title, artist, genre, file_type, file_path FROM tracks WHERE artist=?;"
-	selectByIDQuery        = "SELECT id, title, artist, genre, file_type, file_path FROM tracks WHERE id=?;"
-	deleteByIDQuery        = "DELETE FROM tracks WHERE id=?;"
-	updateByIDQuery        = "UPDATE tracks SET title=?, artist=?, genre=?, file_type=?, file_path=? WHERE id=?;"
+	insertTrackQuery         = "INSERT INTO tracks(title, artist, genre, file_type, file_path) VALUES (?, ?, ?, ?, ?) RETURNING id;"
+	selectAllQuery           = "SELECT id, title, artist, genre, file_type, file_path FROM tracks;"
+	selectAllByArtistQuery   = "SELECT id, title, artist, genre, file_type, file_path FROM tracks WHERE artist=?;"
+	selectAllByTitleQuery    = "SELECT id, title, artist, genre, file_type, file_path FROM tracks WHERE title=?;"
+	selectAllByGenreQuery    = "SELECT id, title, artist, genre, file_type, file_path FROM tracks WHERE genre=?;"
+	selectAllByFileTypeQuery = "SELECT id, title, artist, genre, file_type, file_path FROM tracks WHERE file_type=?;"
+	selectByIDQuery          = "SELECT id, title, artist, genre, file_type, file_path FROM tracks WHERE id=?;"
+	deleteByIDQuery          = "DELETE FROM tracks WHERE id=?;"
+	updateByIDQuery          = "UPDATE tracks SET title=?, artist=?, genre=?, file_type=?, file_path=? WHERE id=?;"
 )
 
 func (s *Storage) AddTrack(track *music.Track) error {
@@ -91,13 +94,29 @@ func (s *Storage) GetAllTracks() ([]music.Track, error) {
 	return s.scanTracks(rows)
 }
 
-func (s *Storage) GetTracksByArtist(artist string) ([]music.Track, error) {
-	rows, err := s.db.Query(selectAllByArtistQuery, artist)
+func (s *Storage) getTracksByQyuery(q, field string) ([]music.Track, error) {
+	rows, err := s.db.Query(q, field)
 	if err != nil {
 		return nil, fmt.Errorf("can't get tracks: %w", err)
 	}
 
 	return s.scanTracks(rows)
+}
+
+func (s *Storage) GetTracksByArtist(artist string) ([]music.Track, error) {
+	return s.getTracksByQyuery(selectAllByArtistQuery, artist)
+}
+
+func (s *Storage) GetTracksByTitle(title string) ([]music.Track, error) {
+	return s.getTracksByQyuery(selectAllByTitleQuery, title)
+}
+
+func (s *Storage) GetTracksByGenre(genre string) ([]music.Track, error) {
+	return s.getTracksByQyuery(selectAllByGenreQuery, genre)
+}
+
+func (s *Storage) GetTracksByFileType(ft string) ([]music.Track, error) {
+	return s.getTracksByQyuery(selectAllByFileTypeQuery, ft)
 }
 
 func (s *Storage) GetTrackByID(id int) (music.Track, error) {
