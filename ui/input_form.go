@@ -121,7 +121,9 @@ func (m *model) renderInputForm() string {
 		case errors.Is(m.errMsg, music.ErrEmptyTitle):
 			titleErr = "! Название не может быть пустым!"
 		case errors.Is(m.errMsg, music.ErrEmptyArtist):
-			artistErr = "! Поле автора не может быть пустым!"
+			artistErr = "! Поле исполнителя не может быть пустым!"
+		case errors.Is(m.errMsg, music.ErrEmptyGenre):
+			genreErr = "! Поле жанра не может быть пустым!"
 		case errors.Is(m.errMsg, music.ErrEmptyFileType):
 			fileTypeErr = "! Тип файла не может быть пустым!"
 		case errors.Is(m.errMsg, music.ErrEmptyFilePath):
