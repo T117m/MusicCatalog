@@ -127,7 +127,7 @@ func (m *model) renderInputForm() string {
 		case errors.Is(m.errMsg, music.ErrEmptyFileType):
 			fileTypeErr = "! Тип файла не может быть пустым!"
 		case errors.Is(m.errMsg, music.ErrEmptyFilePath):
-			filePathErr = "! Путь к файлу не может быть пустым!"
+			filePathErr = "! Нужен путь к файлу!"
 		case errors.Is(m.errMsg, music.ErrUnsupportedFormat):
 			fileTypeErr = "! Неподдерживаемый тип файла!"
 			filePathErr = "! Возможно указан неправильный путь!"
@@ -206,6 +206,7 @@ func (ifm *inputFormModel) getInputs() (string, string, string, string, string) 
 func (ifm *inputFormModel) resetInputs() {
 	for i := range ifm.inputs {
 		ifm.inputs[i].Reset()
+		ifm.inputs[i].Placeholder = ""
 	}
 
 	ifm.setFocus(0)

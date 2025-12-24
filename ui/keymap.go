@@ -18,7 +18,7 @@ var (
 	trackListKeyMap = keymap{
 		next: key.NewBinding(
 			key.WithKeys("tab", "ctrl+n"),
-			key.WithHelp("j/↓/Tab/Ctrl+n", "Следующий трек"),
+			key.WithHelp("j/↓/Tab/C-n", "Следующий трек"),
 		),
 		prev: key.NewBinding(
 			key.WithKeys("shift+tab", "ctrl+p"),
