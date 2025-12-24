@@ -53,7 +53,7 @@ var (
 		),
 	}
 
-	addTrackKeyMap = keymap{
+	inputFormKeyMap = keymap{
 		next: key.NewBinding(
 			key.WithKeys("tab", "ctrl+n", "enter"),
 			key.WithHelp("Enter/Tab/C-n", "Следующее поле"),
@@ -69,25 +69,6 @@ var (
 		action: key.NewBinding(
 			key.WithKeys("ctrl+s"),
 			key.WithHelp("C-s", "Сохранить"),
-		),
-	}
-
-	editTrackKeyMap = keymap{
-		next: key.NewBinding(
-			key.WithKeys("tab", "ctrl+n", "enter"),
-			key.WithHelp("Enter/Tab/C-n", "Следующее поле"),
-		),
-		prev: key.NewBinding(
-			key.WithKeys("shift+tab", "ctrl+p"),
-			key.WithHelp("S-Tab/C-p", "Предыдущее поле"),
-		),
-		quit: key.NewBinding(
-			key.WithKeys("esc"),
-			key.WithHelp("Esc", "Отмена"),
-		),
-		action: key.NewBinding(
-			key.WithKeys("ctrl+s"),
-			key.WithHelp("C-s", "Сохранить изменения"),
 		),
 	}
 

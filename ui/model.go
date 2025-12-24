@@ -114,30 +114,30 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case AddTrackView:
 			switch {
-			case key.Matches(msg, addTrackKeyMap.next):
+			case key.Matches(msg, inputFormKeyMap.next):
 				m.input.nextInput()
-			case key.Matches(msg, addTrackKeyMap.prev):
+			case key.Matches(msg, inputFormKeyMap.prev):
 				m.input.Blur()
 				m.input.prevInput()
 				cmd = m.input.Focus()
 				cmds = append(cmds, cmd)
-			case key.Matches(msg, addTrackKeyMap.quit):
+			case key.Matches(msg, inputFormKeyMap.quit):
 				m.quitInput()
-			case key.Matches(msg, addTrackKeyMap.action):
+			case key.Matches(msg, inputFormKeyMap.action):
 				m.addTrack()
 			}
 		case EditTrackView:
 			switch {
-			case key.Matches(msg, editTrackKeyMap.next):
+			case key.Matches(msg, inputFormKeyMap.next):
 				m.input.nextInput()
-			case key.Matches(msg, editTrackKeyMap.prev):
+			case key.Matches(msg, inputFormKeyMap.prev):
 				m.input.Blur()
 				m.input.prevInput()
 				cmd = m.input.Focus()
 				cmds = append(cmds, cmd)
-			case key.Matches(msg, editTrackKeyMap.quit):
+			case key.Matches(msg, inputFormKeyMap.quit):
 				m.quitInput()
-			case key.Matches(msg, editTrackKeyMap.action):
+			case key.Matches(msg, inputFormKeyMap.action):
 				m.editTrack()
 			}
 		case DeleteTrackView:
@@ -188,12 +188,12 @@ func (m model) View() string {
 		}
 		sb.WriteString("\n" + m.help.View(trackListKeyMap))
 	case AddTrackView:
-		m.writeInputForm(&sb, addTrackKeyMap)
+		m.writeInputForm(&sb, inputFormKeyMap)
 	case DeleteTrackView:
 		sb.WriteString(m.renderDeletePrompt())
 		sb.WriteString("\n" + m.help.View(deleteTrackKeyMap))
 	case EditTrackView:
-		m.writeInputForm(&sb, editTrackKeyMap)
+		m.writeInputForm(&sb, inputFormKeyMap)
 	case SearchView:
 		sb.WriteString(m.search.View(baseStyle))
 		sb.WriteString("\n" + unfocusedStyle.Render(m.tracks.View()))
