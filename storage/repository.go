@@ -92,7 +92,7 @@ func (s *Storage) GetAllTracks() ([]music.Track, error) {
 	return s.scanTracks(rows)
 }
 
-func (s *Storage) getTracksByQyuery(q, v string) ([]music.Track, error) {
+func (s *Storage) getTracksByQuery(q, v string) ([]music.Track, error) {
 	rows, err := s.db.Query(q, v)
 	if err != nil {
 		return nil, fmt.Errorf("can't get tracks: %w", err)
@@ -102,19 +102,19 @@ func (s *Storage) getTracksByQyuery(q, v string) ([]music.Track, error) {
 }
 
 func (s *Storage) GetTracksByArtist(artist string) ([]music.Track, error) {
-	return s.getTracksByQyuery(selectAllByArtistQuery, artist)
+	return s.getTracksByQuery(selectAllByArtistQuery, artist)
 }
 
 func (s *Storage) GetTracksByTitle(title string) ([]music.Track, error) {
-	return s.getTracksByQyuery(selectAllByTitleQuery, title)
+	return s.getTracksByQuery(selectAllByTitleQuery, title)
 }
 
 func (s *Storage) GetTracksByGenre(genre string) ([]music.Track, error) {
-	return s.getTracksByQyuery(selectAllByGenreQuery, genre)
+	return s.getTracksByQuery(selectAllByGenreQuery, genre)
 }
 
 func (s *Storage) GetTracksByFileType(ft string) ([]music.Track, error) {
-	return s.getTracksByQyuery(selectAllByFileTypeQuery, ft)
+	return s.getTracksByQuery(selectAllByFileTypeQuery, ft)
 }
 
 func (s *Storage) GetTrackByID(id int) (music.Track, error) {
