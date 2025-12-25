@@ -7,5 +7,7 @@ CREATE TABLE IF NOT EXISTS tracks (
     file_path TEXT UNIQUE NOT NULL
 );
 
+CREATE INDEX IF NOT EXISTS idx_title ON tracks (title);
 CREATE INDEX IF NOT EXISTS idx_artist ON tracks (artist);
 CREATE INDEX IF NOT EXISTS idx_genre ON tracks (genre);
+CREATE INDEX IF NOT EXISTS idx_file_type ON tracks (file_type);

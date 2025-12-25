@@ -1,18 +1,19 @@
 package player
 
 import (
-	"errors"
 	"fmt"
+	"os"
+	"sync"
+	"time"
+
 	"github.com/T117m/MusicCatalog/music"
+
 	"github.com/gopxl/beep"
 	"github.com/gopxl/beep/flac"
 	"github.com/gopxl/beep/mp3"
 	"github.com/gopxl/beep/speaker"
 	"github.com/gopxl/beep/vorbis"
 	"github.com/gopxl/beep/wav"
-	"os"
-	"sync"
-	"time"
 )
 
 type Player struct {
@@ -183,39 +184,6 @@ func (p *Player) Resume() {
 		p.ctrl.Paused = false
 		p.state = Playing
 	}
-}
-
-func (p *Player) Seek(position time.Duration) error {
-	p.mutex.Lock()
-	defer p.mutex.Unlock()
-
-	if p.source == nil || p.state == Stopped {
-		return errors.New("no track playing")
-	}
-
-	pos := p.format.SampleRate.N(position)
-
-	speaker.Lock()
-	if p.ctrl != nil {
-		p.ctrl.Streamer = nil
-	}
-	speaker.Unlock()
-
-	if err := p.source.Seek(pos); err != nil {
-		return err
-	}
-
-	if p.format.SampleRate != defaultSampleRate {
-		p.streamer = beep.Resample(4, p.format.SampleRate, defaultSampleRate, p.source)
-	} else {
-		p.streamer = p.source
-	}
-
-	p.ctrl = &beep.Ctrl{Streamer: p.streamer}
-
-	speaker.Play(p.ctrl)
-
-	return nil
 }
 
 func (p *Player) GetPosition() time.Duration {
