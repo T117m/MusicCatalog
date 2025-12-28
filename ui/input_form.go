@@ -12,7 +12,7 @@ import (
 	gloss "github.com/charmbracelet/lipgloss"
 )
 
-type field int
+type field uint8
 
 const (
 	title field = iota
@@ -24,7 +24,7 @@ const (
 
 type inputFormModel struct {
 	inputs  []ti.Model
-	focused int
+	focused field
 }
 
 func newInputModel() inputFormModel {
@@ -167,15 +167,18 @@ func writeInputField(sb *strings.Builder, header, errMsg string, input *ti.Model
 
 func (ifm *inputFormModel) nextInput() {
 	ifm.Blur()
-	ifm.focused = (ifm.focused + 1) % len(ifm.inputs)
+	ifm.focused = (ifm.focused + 1) % field(len(ifm.inputs))
 	ifm.Focus()
 }
 
 func (ifm *inputFormModel) prevInput() {
-	ifm.focused--
-	if ifm.focused < 0 {
-		ifm.focused = len(ifm.inputs) - 1
+	ifm.Blur()
+	if ifm.focused == title {
+		ifm.focused = fp
+	} else {
+		ifm.focused--
 	}
+	ifm.Focus()
 }
 
 func (m *model) quitInput() {
@@ -187,14 +190,8 @@ func (m *model) quitInput() {
 }
 
 func (ifm *inputFormModel) setFocus(f field) {
-	index := int(f)
-
-	if index < 0 || index >= len(ifm.inputs) {
-		return
-	}
-
 	ifm.Blur()
-	ifm.focused = index
+	ifm.focused = f
 	ifm.Focus()
 }
 
@@ -209,5 +206,5 @@ func (ifm *inputFormModel) resetInputs() {
 		ifm.inputs[i].Placeholder = ""
 	}
 
-	ifm.setFocus(0)
+	ifm.setFocus(title)
 }

@@ -38,10 +38,6 @@ func (s *searchModel) View(st gloss.Style) string {
 		sb strings.Builder
 	)
 
-	if s.tag > 3 || s.tag < 0 {
-		s.tag = 0
-	}
-
 	sb.WriteString(
 		gloss.JoinHorizontal(
 			gloss.Top,
@@ -53,4 +49,20 @@ func (s *searchModel) View(st gloss.Style) string {
 	)
 
 	return sb.String()
+}
+
+func (s *searchModel) nextTag() {
+	if s.tag == ft {
+		s.tag = title
+	} else {
+		s.tag++
+	}
+}
+
+func (s *searchModel) prevTag() {
+	if s.tag == title {
+		s.tag = ft
+	} else {
+		s.tag--
+	}
 }

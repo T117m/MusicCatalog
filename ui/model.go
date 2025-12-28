@@ -27,7 +27,7 @@ type model struct {
 	help    help.Model
 }
 
-type ViewMode int
+type ViewMode uint8
 
 const (
 	TrackListView ViewMode = iota
@@ -117,10 +117,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case key.Matches(msg, inputFormKeyMap.next):
 				m.input.nextInput()
 			case key.Matches(msg, inputFormKeyMap.prev):
-				m.input.Blur()
 				m.input.prevInput()
-				cmd = m.input.Focus()
-				cmds = append(cmds, cmd)
 			case key.Matches(msg, inputFormKeyMap.quit):
 				m.quitInput()
 			case key.Matches(msg, inputFormKeyMap.action):
@@ -131,10 +128,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case key.Matches(msg, inputFormKeyMap.next):
 				m.input.nextInput()
 			case key.Matches(msg, inputFormKeyMap.prev):
-				m.input.Blur()
 				m.input.prevInput()
-				cmd = m.input.Focus()
-				cmds = append(cmds, cmd)
 			case key.Matches(msg, inputFormKeyMap.quit):
 				m.quitInput()
 			case key.Matches(msg, inputFormKeyMap.action):
@@ -153,15 +147,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case SearchView:
 			switch {
 			case key.Matches(msg, searchTrackKeyMap.next):
-				m.search.tag++
-				if m.search.tag > 3 {
-					m.search.tag = 0
-				}
+				m.search.nextTag()
 			case key.Matches(msg, searchTrackKeyMap.prev):
-				m.search.tag--
-				if m.search.tag < 0 {
-					m.search.tag = 3
-				}
+				m.search.prevTag()
 			case key.Matches(msg, searchTrackKeyMap.quit):
 				m.search.input.Blur()
 				m.view = TrackListView
